@@ -1,2 +1,5 @@
 # improclib
-Simples image processing library
+Simplest image processing library
+
+
+This is on pre-pre-...-pre-alpha stage.
