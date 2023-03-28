@@ -1,0 +1,11 @@
+draw.c
+examples/equalize.c
+examples/generate.c
+examples/genu16.c
+imagefile.c
+improclib.h
+letters.c
+openmp.h
+stb/stb_image.h
+stb/stb_image_write.h
+stbimpl.c
