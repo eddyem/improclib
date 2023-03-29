@@ -110,7 +110,10 @@ static ilInputType imtype(FILE *f){
 ilInputType ilchkinput(const char *name){
     DBG("input name: %s", name);
     struct stat fd_stat;
-    stat(name, &fd_stat);
+    if(stat(name, &fd_stat)){
+        WARN("Can't stat() %s", name);
+        return T_WRONG;
+    }
     if(S_ISDIR(fd_stat.st_mode)){
         DBG("%s is a directory", name);
         DIR *d = opendir(name);

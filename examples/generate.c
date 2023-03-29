@@ -62,8 +62,8 @@ static void addstar(ilImg3 *I, const char *str){
     if(!getpars(str, &x, &y, &a)) return;
     printf("Add 'star' at %d,%d (ampl=%d)\n", x,y,a);
     uint8_t c[3] = {a,a,a};
-    ilPattern_draw3(I, star, x, y, c);
-    ilPattern_draw3(I, cross, x, y, ilColor_red);
+    ilImg3_drawpattern(I, star, x, y, c);
+    ilImg3_drawpattern(I, cross, x, y, ilColor_red);
 }
 
 static void addfromfile(ilImg3 *I){
@@ -94,6 +94,10 @@ int main(int argc, char **argv){
     for(int i = 0; i < argc; ++i) addstar(I, argv[i]);
     if(inp) addfromfile(I);
     ilPattern_free(&star);
+    uint8_t color[] = {255, 0, 100};
+    //uint8_t color[] = {0, 0, 0};
+    ilImg3_putstring(I, "Test string", 450, 520, color);
+    ilImg3_drawline(I, -10,900, 1600,1050, color);
     int ret = ilImg3_jpg(outp, I, 95);
     //int ret = ilImg3_png(outp, I);
     ilImg3_free(&I);

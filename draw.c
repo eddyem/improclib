@@ -25,6 +25,10 @@
 #include "improclib.h"
 #include "openmp.h"
 
+#ifndef ABS
+#define ABS(x)  (((x) > 0) ? (x) : -(x))
+#endif
+
 // base colors:
 const uint8_t
     ilColor_red[3] = {255, 0, 0},
@@ -171,6 +175,7 @@ ilImage *ilImage_star(ilimtype_t type, int w, int h, double fwhm, double beta){
     }
     return p;
 }
+#undef DRAW_star
 
 /**
  * @brief ilPattern_draw3 - draw pattern @ 3-channel image
@@ -179,7 +184,7 @@ ilImage *ilImage_star(ilimtype_t type, int w, int h, double fwhm, double beta){
  * @param xc, yc      - coordinates of pattern center @ image
  * @param color       - color to draw pattern (when opaque == 255)
  */
-void ilPattern_draw3(ilImg3 *img, const ilPattern *p, int xc, int yc, const uint8_t color[3]){
+void ilImg3_drawpattern(ilImg3 *img, const ilPattern *p, int xc, int yc, const uint8_t color[3]){
     if(!img || !p) return;
     int xul = xc - p->width/2, yul = yc - p->height/2;
     int xdr = xul+p->width-1, ydr = yul+p->height-1;
@@ -240,7 +245,7 @@ void ilPattern_draw3(ilImg3 *img, const ilPattern *p, int xc, int yc, const uint
  * @param xc, yc      - coordinates of pattern center @ image
  * @param weight      - img = img + p*weight
  */
-void iladd_subimage(ilImage *img, const ilImage *p, int xc, int yc, double weight){
+void ilImage_addsub(ilImage *img, const ilImage *p, int xc, int yc, double weight){
     if(!img || !p) return;
     if(img->type != p->type){
         WARNX("iladd_subimage(): types of image and subimage must match");
@@ -293,3 +298,196 @@ void iladd_subimage(ilImage *img, const ilImage *p, int xc, int yc, double weigh
             ERRX("iladd_subimage(): wrong image type");
     }
 }
+#undef ADD_subim
+
+#define PUTP(type) do{((type*)I->data)[I->width*y+x] = *((type*)val);}while(0)
+/**
+ * @brief ilImage_drawpix - put pixel @(x,y)
+ * @param I - image
+ * @param x - point coordinates
+ * @param y
+ * @param val - data value to set (the same type as I->data)
+ */
+void ilImage_drawpix(ilImage *I, int x, int y, const void *val){
+    if(x < 0 || x >= I->width || y < 0 || y >= I->height) return;
+    switch(I->type){
+        case IMTYPE_U8:
+            PUTP(uint8_t);
+        break;
+        case IMTYPE_U16:
+            PUTP(uint16_t);
+        break;
+        case IMTYPE_U32:
+            PUTP(uint32_t);
+        break;
+        case IMTYPE_F:
+            PUTP(float);
+        break;
+        case IMTYPE_D:
+            PUTP(double);
+        break;
+        default:
+            ERRX("ilImage_drawpix(): wrong image type");
+    }
+}
+#undef PUTP
+
+static void plotLineLow(ilImage *I, int x0, int y0, int x1, int y1, const void *val){
+    int dx = x1 - x0, dy = y1 - y0, yi = 1;
+    if(dy < 0){ yi = -1; dy = -dy; }
+    int D = (2 * dy) - dx,  y = y0;
+    for(int x = x0; x <= x1; ++x){
+        ilImage_drawpix(I, x, y, val);
+        if(D > 0){
+            y += yi;
+            D += 2 * (dy - dx);
+        }else{
+            D += 2*dy;
+        }
+    }
+}
+static void plotLineHigh(ilImage *I, int x0, int y0, int x1, int y1, const void *val){
+    int dx = x1 - x0, dy = y1 - y0, xi = 1;
+    if(dx < 0){ xi = -1; dx = -dx; }
+    int D = (2 * dx) - dy,  x = x0;
+    for(int y = y0; y <= y1; ++y){
+        ilImage_drawpix(I, x, y, val);
+        if(D > 0){
+            x += xi;
+            D += 2 * (dx - dy);
+        }else{
+            D += 2*dx;
+        }
+    }
+}
+/**
+ * @brief ilImage_drawline - Bresenham's line drawing on Image
+ * @param I - image
+ * @param x0 - first point
+ * @param y0
+ * @param x1 - last point
+ * @param y1
+ * @param val - value to put
+ */
+void ilImage_drawline(ilImage *I, int x0, int y0, int x1, int y1, const void *val){
+    if(!I || !I->data) return;
+    if(ABS(y1 - y0) < ABS(x1 - x0)){
+        if(x0 > x1) plotLineLow(I, x1, y1, x0, y0, val);
+        else plotLineLow(I, x0, y0, x1, y1, val);
+    }else{
+        if(y0 > y1) plotLineHigh(I, x1, y1, x0, y0, val);
+        else plotLineHigh(I, x0, y0, x1, y1, val);
+    }
+}
+
+/**
+ * @brief ilImage_drawcircle - Bresenham's circle drawing on Image
+ * @param I - image
+ * @param x0- circle center
+ * @param y0
+ * @param R - circle radius
+ * @param val - value to put
+ */
+void ilImage_drawcircle(ilImage *I, int x0, int y0, int R, const void *val){
+    int x = R;
+    int y = 0;
+    int radiusError = 1-x;
+    while(x >= y){
+        ilImage_drawpix(I, x + x0,   y + y0, val);
+        ilImage_drawpix(I, y + x0,   x + y0, val);
+        ilImage_drawpix(I, -x + x0,  y + y0, val);
+        ilImage_drawpix(I, -y + x0,  x + y0, val);
+        ilImage_drawpix(I, -x + x0, -y + y0, val);
+        ilImage_drawpix(I, -y + x0, -x + y0, val);
+        ilImage_drawpix(I, x + x0,  -y + y0, val);
+        ilImage_drawpix(I, y + x0,  -x + y0, val);
+        y++;
+        if (radiusError < 0){
+            radiusError += 2 * y + 1;
+        }else{
+            x--;
+            radiusError += 2 * (y - x) + 1;
+        }
+    }
+
+}
+
+/**
+ * @brief ilImg3_setcolor - set image pixel to given color or its negative (if original color is near to target)
+ * @param impixel - pixel to change
+ * @param color - desired color
+ */
+void ilImg3_setcolor(uint8_t impixel[3], const uint8_t color[3]){
+    int invert = 0;
+    for(int i = 0; i < 3; ++i)
+        if(impixel[i] > color[i]){
+            if(impixel[i] - color[i] < 127) ++invert;
+        }else if(color[i] - impixel[i] < 127) ++invert;
+    if(invert == 3) for(int i = 0; i < 3; ++i) impixel[i] = ~color[i];
+    else for(int i = 0; i < 3; ++i) impixel[i] = color[i];
+}
+
+/**
+ * @brief ilImg3_drawpix - draw pixel with `color` or its negative on coloured image
+ * @param I - image
+ * @param x - point coordinates
+ * @param y
+ * @param color - desired color
+ */
+void ilImg3_drawpix(ilImg3 *I, int x, int y, const uint8_t color[3]){
+    if(!I || !I->data) return;
+    if(x < 0 || x >= I->width) return;
+    if(y < 0 || y >= I->height) return;
+    ilImg3_setcolor(I->data + 3*(I->width*y+x), color);
+}
+
+static void plotLineLow3(ilImg3 *I, int x0, int y0, int x1, int y1, const uint8_t color[3]){
+    int dx = x1 - x0, dy = y1 - y0, yi = 1;
+    if(dy < 0){ yi = -1; dy = -dy; }
+    int D = (2 * dy) - dx,  y = y0;
+    for(int x = x0; x <= x1; ++x){
+        ilImg3_drawpix(I, x, y, color);
+        if(D > 0){
+            y += yi;
+            D += 2 * (dy - dx);
+        }else{
+            D += 2*dy;
+        }
+    }
+}
+
+static void plotLineHigh3(ilImg3 *I, int x0, int y0, int x1, int y1, const uint8_t color[3]){
+    int dx = x1 - x0, dy = y1 - y0, xi = 1;
+    if(dx < 0){ xi = -1; dx = -dx; }
+    int D = (2 * dx) - dy,  x = x0;
+    for(int y = y0; y <= y1; ++y){
+        ilImg3_drawpix(I, x, y, color);
+        if(D > 0){
+            x += xi;
+            D += 2 * (dx - dy);
+        }else{
+            D += 2*dx;
+        }
+    }
+}
+
+/**
+ * @brief ilImg3_drawline - Bresenham's line drawing on Img3
+ * @param I - image
+ * @param x0 - first point
+ * @param y0
+ * @param x1 - last point
+ * @param y1
+ * @param color - drawing color
+ */
+void ilImg3_drawline(ilImg3 *I, int x0, int y0, int x1, int y1, const uint8_t color[3]){
+    if(!I || !I->data) return;
+    if(ABS(y1 - y0) < ABS(x1 - x0)){
+        if(x0 > x1) plotLineLow3(I, x1, y1, x0, y0, color);
+        else plotLineLow3(I, x0, y0, x1, y1, color);
+    }else{
+        if(y0 > y1) plotLineHigh3(I, x1, y1, x0, y0, color);
+        else plotLineHigh3(I, x0, y0, x1, y1, color);
+    }
+}
+

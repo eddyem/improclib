@@ -16,9 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "improclib.h"
 #include <stdio.h>
 #include <usefull_macros.h>
+
+#include "improclib.h"
+#include "openmp.h"
 
 static const uint8_t letters[95][13] = {
 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},// space :32
@@ -130,6 +132,14 @@ static const uint8_t letters[95][13] = {
         } \
     }
 
+/**
+ * @brief ilImage_putstring - print text string over image
+ * @param I - image
+ * @param str - zero-terminated sring
+ * @param x - x coordinate of left bottom text angle
+ * @param y - y (upside down)
+ * @return
+ */
 int ilImage_putstring(ilImage *I, const char *str, int x, int y){
     int c;
     if(x >= I->width || y < 1 || y > I->height + 12) return FALSE;
@@ -164,6 +174,38 @@ int ilImage_putstring(ilImage *I, const char *str, int x, int y){
             break;
             default:
                 return FALSE;
+        }
+        ++str;
+        x += 9;
+    }
+    return TRUE;
+}
+
+// the same as ilImage_putstring but with given color
+int ilImg3_putstring(ilImg3 *I, const char *str, int x, int y, const uint8_t color[3]){
+    int c;
+    if(x >= I->width || y < 1 || y > I->height + 12) return FALSE;
+    int startx = x;
+    while((c = (int)*str)){
+        if(c == '\n'){ // newline
+            y += 14;
+            if(y > I->height+7) break;
+            ++str;
+            x = startx;
+            continue;
+        }
+        c -= 32;
+        if(c < 0 || c > 94) continue;
+        if(x > I->width) break;
+        const uint8_t *letter = letters[c];
+        for(int cury = y; cury > y-13; --cury, ++letter){ if(cury >= I->height) continue; if(cury < 0) break;
+            uint8_t *data = &((uint8_t*)I->data)[3 * (I->width * cury + x)];
+            uint8_t l = *letter;
+            for(int curx = x; curx < x+8; ++curx, data+=3, l <<= 1){ if(curx >= I->width) break; if(curx < 0) continue;
+                if(l & 0x80){ // foreground - set to it given color or its negative
+                    ilImg3_setcolor(data, color);
+                }
+            }
         }
         ++str;
         x += 9;

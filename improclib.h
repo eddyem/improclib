@@ -81,12 +81,21 @@ ilPattern *ilPattern_new(int w, int h);
 void ilPattern_free(ilPattern **I);
 ilImg3 *ilImg3_new(int w, int h);
 void ilImg3_free(ilImg3 **I3);
+
 ilPattern *ilPattern_cross(int w, int h);
 ilPattern *ilPattern_xcross(int w, int h);
 ilPattern *ilPattern_star(int w, int h, double fwhm, double beta);
 ilImage *ilImage_star(ilimtype_t type, int w, int h, double fwhm, double beta);
-void ilPattern_draw3(ilImg3 *img, const ilPattern *p, int xc, int yc, const uint8_t color[3]);
-void iladd_subimage(ilImage *img, const ilImage *p, int xc, int yc, double weight);
+
+void ilImage_addsub(ilImage *img, const ilImage *p, int xc, int yc, double weight);
+void ilImage_drawpix(ilImage *I, int x, int y, const void *val);
+void ilImage_drawline(ilImage *I, int x0, int y0, int x1, int y1, const void *val);
+void ilImage_drawcircle(ilImage *I, int x0, int y0, int R, const void *val);
+
+void ilImg3_drawpattern(ilImg3 *img, const ilPattern *p, int xc, int yc, const uint8_t color[3]);
+void ilImg3_setcolor(uint8_t impixel[3], const uint8_t color[3]);
+void ilImg3_drawpix(ilImg3 *img, int x, int y, const uint8_t color[3]);
+void ilImg3_drawline(ilImg3 *img, int x0, int y0, int x1, int y1, const uint8_t color[3]);
 
 /*================================================================================*
  *                                 imagefile.c                                    *
@@ -123,7 +132,7 @@ int ilwrite_png(const char *name, int w, int h, int ncolors, uint8_t *bytes);
  *                                letters.c                                       *
  *================================================================================*/
 int ilImage_putstring(ilImage *I, const char *str, int x, int y);
-
+int ilImg3_putstring(ilImg3 *I, const char *str, int x, int y, const uint8_t color[3]);
 
 
 /*================================================================================*

@@ -39,8 +39,8 @@ int main(int argc, char **argv){
     I3->height = h;
     I3->width = w;
     ilPattern *cross = ilPattern_xcross(25, 25);
-    ilPattern_draw3(I3, cross, 30, 30, ilColor_red);
-    ilPattern_draw3(I3, cross, 150, 50, ilColor_green);
+    ilImg3_drawpattern(I3, cross, 30, 30, ilColor_red);
+    ilImg3_drawpattern(I3, cross, 150, 50, ilColor_green);
     ilPattern_free(&cross);
     int ret = ilImg3_jpg("output.jpg", I3, 95);
     ilImg3_free(&I3);

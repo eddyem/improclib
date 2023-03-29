@@ -62,7 +62,7 @@ static void addstar(ilImage *I, const char *str){
     double w;
     if(!getpars(str, &x, &y, &w)) return;
     printf("Add 'star' at %d,%d (weight=%g)\n", x,y,w);
-    iladd_subimage(I, star, x, y, w);
+    ilImage_addsub(I, star, x, y, w);
 }
 
 static void addfromfile(ilImage *I){
@@ -97,6 +97,10 @@ int main(int argc, char **argv){
     ilImage_putstring(I, "0", 0, 1016);
     ilImage_putstring(I, "Hello, world.!?\"'\nMore again", 50, 500);
     ilImage_putstring(I, "Hello, world!", 950, 1018);
+    uint16_t v = 50000;
+    ilImage_drawline(I, -100,-1000, 1000, 1200, &v);
+    ilImage_drawcircle(I, 1000,1000, 1000, &v);
+    ilImage_drawcircle(I, 512,512, 512, &v);
     for(int _ = 0; _ < 1024; _ += 50){
         char s[6];
         snprintf(s, 6, "%d", _);
