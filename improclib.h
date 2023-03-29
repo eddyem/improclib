@@ -96,6 +96,10 @@ void ilImg3_drawpattern(ilImg3 *img, const ilPattern *p, int xc, int yc, const u
 void ilImg3_setcolor(uint8_t impixel[3], const uint8_t color[3]);
 void ilImg3_drawpix(ilImg3 *img, int x, int y, const uint8_t color[3]);
 void ilImg3_drawline(ilImg3 *img, int x0, int y0, int x1, int y1, const uint8_t color[3]);
+void ilImg3_drawcircle(ilImg3 *I, int x0, int y0, int R, const uint8_t color[3]);
+void ilImg3_drawgrid(ilImg3 *img, int x0, int y0, int xstep, int ystep, const uint8_t color[3]);
+
+ilImg3 *ilImg3_subimage(const ilImg3 *I, int x0, int y0, int x1, int y1);
 
 /*================================================================================*
  *                                 imagefile.c                                    *

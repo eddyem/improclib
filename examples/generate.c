@@ -98,6 +98,14 @@ int main(int argc, char **argv){
     //uint8_t color[] = {0, 0, 0};
     ilImg3_putstring(I, "Test string", 450, 520, color);
     ilImg3_drawline(I, -10,900, 1600,1050, color);
+    ilImg3_drawcircle(I, 400,400, 500, color);
+    ilImg3_drawgrid(I, 0, 0, 100, 100, ilColor_green);
+    ilImg3_drawgrid(I, 0, 0, -20, -20, ilColor_blue);
+    ilImg3 *s = ilImg3_subimage(I, 100,-100, 899,1099);
+    if(s){
+        ilImg3_jpg("outpsubimage.jpg", s, 95);
+        ilImg3_free(&s);
+    }else WARNX("Bad subimage parameters");
     int ret = ilImg3_jpg(outp, I, 95);
     //int ret = ilImg3_png(outp, I);
     ilImg3_free(&I);

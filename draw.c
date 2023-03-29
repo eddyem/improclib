@@ -21,6 +21,7 @@
 #include <usefull_macros.h>
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "improclib.h"
 #include "openmp.h"
@@ -491,3 +492,124 @@ void ilImg3_drawline(ilImg3 *I, int x0, int y0, int x1, int y1, const uint8_t co
     }
 }
 
+/**
+ * @brief ilImg3_drawcircle - Bresenham's circle drawing on Image
+ * @param I - image
+ * @param x0- circle center
+ * @param y0
+ * @param R - circle radius
+ * @param val - value to put
+ */
+void ilImg3_drawcircle(ilImg3 *I, int x0, int y0, int R, const uint8_t color[3]){
+    int x = R;
+    int y = 0;
+    int radiusError = 1-x;
+    while(x >= y){
+        ilImg3_drawpix(I, x + x0,   y + y0, color);
+        ilImg3_drawpix(I, y + x0,   x + y0, color);
+        ilImg3_drawpix(I, -x + x0,  y + y0, color);
+        ilImg3_drawpix(I, -y + x0,  x + y0, color);
+        ilImg3_drawpix(I, -x + x0, -y + y0, color);
+        ilImg3_drawpix(I, -y + x0, -x + y0, color);
+        ilImg3_drawpix(I, x + x0,  -y + y0, color);
+        ilImg3_drawpix(I, y + x0,  -x + y0, color);
+        y++;
+        if (radiusError < 0){
+            radiusError += 2 * y + 1;
+        }else{
+            x--;
+            radiusError += 2 * (y - x) + 1;
+        }
+    }
+
+}
+
+// dots period in dotted line
+#define DOTSTEP (7)
+
+static void drawhline(ilImg3 *img, int y, const uint8_t color[3], int dots){
+    if(y < 0 || y >= img->height) return;
+    uint8_t *data = img->data + 3*y*img->width;
+    for(int x = 0; x < img->width; ++x, data += 3){
+        if(dots && (x % DOTSTEP)) continue;
+        ilImg3_setcolor(data, color);
+    }
+}
+static void drawvline(ilImg3 *img, int x, const uint8_t color[3], int dots){
+    if(x < 0 || x >= img->width) return;
+    uint8_t *data = img->data + 3*x;
+    int step = 3*img->width;
+    for(int y = 0; y < img->height; ++y, data += step){
+        if(dots && (y % DOTSTEP)) continue;
+        ilImg3_setcolor(data, color);
+    }
+}
+
+/**
+ * @brief ilImg3_drawgrid - draw simplest grid on image
+ * @param img - image
+ * @param x0 - grid center (0,0)
+ * @param y0
+ * @param xstep - step of vertical lines (if negative, plot dotted; if zero, don't plot)
+ * @param ystep - step of horizontal lines (-//-)
+ * @param color - color to draw
+ */
+void ilImg3_drawgrid(ilImg3 *img, int x0, int y0, int xstep, int ystep, const uint8_t color[3]){
+    int dotted = 0;
+    if(ystep){
+        if(ystep < 0){ dotted = 1; ystep = -ystep; }
+        int yl = y0 % ystep, yr = yl + img->height - img->height % ystep + 1;
+        DBG("draw horlines from %d to %d with step %d", yl, yr, ystep);
+        for(int y = yl; y < yr; y += ystep){
+            drawhline(img, y, color, dotted);
+            /*if(!dotted){
+                char s[32];
+                snprintf(s, 31, "%d", (y-y0)/ ystep);
+                ilImg3_putstring(img, s, img->width/2+2, y-2, color);
+            }*/
+        }
+    }
+    if(xstep){
+        if(xstep < 0){ dotted = 1; xstep = -xstep; }
+        int xl = x0 % xstep, xr = xl + img->width - img->width % xstep + 1;
+        DBG("draw vertlines from %d to %d with step %d", xl, xr, xstep);
+        for(int x = xl; x < xr; x += xstep){
+            drawvline(img, x, color, dotted);
+            /*if(!dotted){
+                char s[32];
+                snprintf(s, 31, "%d", (x-x0)/ xstep);
+                ilImg3_putstring(img, s, x+2, img->height/2-2, color);
+            }*/
+        }
+    }
+}
+
+/**
+ * @brief ilImg3_subimage - allocate image with size (x1-x0+1)x(y1-y0+1) and copy into it subimage of I
+ * @param I - original
+ * @param x0 - left upper point
+ * @param y0
+ * @param x1 - right down point
+ * @param y1
+ * @return image allocated here (or NULL if error)
+ */
+ilImg3 *ilImg3_subimage(const ilImg3 *I, int x0, int y0, int x1, int y1){
+    if(x0 >= x1 || x1 < 0 || y0 >= y1 || y1 < 0 || !I || !I->data || !I->height || !I->width) return NULL;
+    ilImg3 *O = ilImg3_new(x1-x0+1, y1-y0+1);
+    if(!O) return NULL;
+    // input coordinates of angles to copy & len for memcpy
+    int ixl = x0 > 0 ? x0 : 0, ixr = x1 < I->width ? x1 : I->width-1, xlen = 3*(ixr-ixl+1);
+    int iyt = y0 > 0 ? y0 : 0, iyb = y1 < I->height ? y1 : I->height-1, ypix = iyb - iyt + 1;
+    // output coordinates
+    int oxl = x0 < 0 ? -x0 : 0, oxr = oxl + ixr - ixl;
+    int oyt = y0 < 0 ? -y0 : 0, oyb = oyt + iyb - iyt;
+    DBG("input subimage: from (%d, %d) to (%d, %d), w=%d, h=%d", ixl,iyt, ixr, iyb, xlen/3, ypix);
+    DBG("output subimage: from (%d, %d) to (%d, %d)", oxl,oyt, oxr, oyb);
+    OMP_FOR()
+    for(int y = 0; y < ypix; ++y){
+        uint8_t *in = I->data + (ixl + (iyt + y)*I->width)*3;
+        uint8_t *out = O->data + (oxl + (oyt + y)*O->width)*3;
+        memcpy(out, in, xlen);
+    }
+    return O;
+}
