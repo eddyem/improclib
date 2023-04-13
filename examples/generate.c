@@ -22,7 +22,7 @@
 #include <string.h>
 
 static int w = 1024, h = 1024, help = 0;
-static double fwhm = 3.5, beta = 1.;
+static double fwhm = 3.5, beta = 1., lambda = 10.;
 static char *outp = "output.jpg", *inp = NULL;
 
 static ilPattern *star = NULL, *cross = NULL;
@@ -34,6 +34,7 @@ static myoption cmdlnopts[] = {
     {"output",  NEED_ARG,   NULL,   'o',    arg_string, APTR(&outp),    "output file name (default: output.jpg)"},
     {"halfwidth",NEED_ARG,  NULL,   's',    arg_double, APTR(&fwhm),    "FWHM of 'star' images (default: 3.5)"},
     {"beta",    NEED_ARG,   NULL,   'b',    arg_double, APTR(&beta),    "beta Moffat parameter of 'star' images (default: 1)"},
+    {"lambda",  NEED_ARG,   NULL,   'l',    arg_double, APTR(&lambda),  "lambda of Poisson noice (default: 10)"},
     {"input",   NEED_ARG,   NULL,   'i',    arg_string, APTR(&inp),     "input file with coordinates and amplitudes (comma separated)"},
     end_option
 };
@@ -63,10 +64,15 @@ static void addstar(ilImg3 *I, const char *str){
     printf("Add 'star' at %d,%d (ampl=%d)\n", x,y,a);
     uint8_t c[3] = {a,a,a};
     ilImg3_drawpattern(I, star, x, y, c);
+}
+static void addcross(ilImg3 *I, const char *str){
+    int x, y, a;
+    if(!getpars(str, &x, &y, &a)) return;
+    printf("Add 'cross' at %d,%d (ampl=%d)\n", x,y,a);
     ilImg3_drawpattern(I, cross, x, y, ilColor_red);
 }
 
-static void addfromfile(ilImg3 *I){
+static void addfromfile(ilImg3 *I, void (*fn)(ilImg3*, const char*)){
     FILE *f = fopen(inp, "r");
     if(!f){
         WARN("Can't open %s", inp);
@@ -74,7 +80,7 @@ static void addfromfile(ilImg3 *I){
     }
     char *line = NULL;
     size_t n = 0;
-    while(getline(&line, &n, f) > 0) addstar(I, line);
+    while(getline(&line, &n, f) > 0) fn(I, line);
     fclose(f);
 }
 
@@ -92,8 +98,15 @@ int main(int argc, char **argv){
     star = ilPattern_star(par, par, fwhm, beta);
     cross = ilPattern_xcross(25, 25);
     for(int i = 0; i < argc; ++i) addstar(I, argv[i]);
-    if(inp) addfromfile(I);
+    if(inp) addfromfile(I, addstar);
     ilPattern_free(&star);
+    double t0 = dtime();
+    ilImg3_addPoisson(I, lambda);
+    green("Poisson noice took %gms\n", (dtime()-t0) * 1e3);
+    if(!ilImg3_jpg(outp, I, 95)) WARNX("Can't save %s", outp);
+    for(int i = 0; i < argc; ++i) addcross(I, argv[i]);
+    if(inp) addfromfile(I, addcross);
+    ilPattern_free(&cross);
     uint8_t color[] = {255, 0, 100};
     //uint8_t color[] = {0, 0, 0};
     ilImg3_putstring(I, "Test string", 450, 520, color);
@@ -106,7 +119,7 @@ int main(int argc, char **argv){
         ilImg3_jpg("outpsubimage.jpg", s, 95);
         ilImg3_free(&s);
     }else WARNX("Bad subimage parameters");
-    int ret = ilImg3_jpg(outp, I, 95);
+    int ret = ilImg3_jpg("crosses.jpg", I, 95);
     //int ret = ilImg3_png(outp, I);
     ilImg3_free(&I);
     if(!ret) return 4;

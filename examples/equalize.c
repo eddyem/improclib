@@ -31,7 +31,9 @@ int main(int argc, char **argv){
         return 2;
     }
     int w = I->width, h = I->height;
+    double t0 = dtime();
     uint8_t *eq = ilequalize8(I, 3, 0.1);
+    green("Equalize: %g ms\n", (dtime() - t0)*1e3);
     ilImage_free(&I);
     if(!eq) return 3;
     ilImg3 *I3 = MALLOC(ilImg3, 1);
