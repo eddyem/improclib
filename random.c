@@ -22,7 +22,7 @@
 #include <usefull_macros.h>
 
 // Box&Muller method for gaussian RNG (mean=0, std=1)
-double ilNormalBase(){
+double il_NormalBase(){
     double U = drand48(), V = drand48();
     double S = sqrt(-2*log(U));
     double X = S * cos(2*M_PI*V);
@@ -30,17 +30,17 @@ double ilNormalBase(){
     return X * Y;
 }
 
-double ilNormal(double mean, double std){
-    return ilNormalBase() * std + mean;
+double il_Normal(double mean, double std){
+    return il_NormalBase() * std + mean;
 }
 
 /**
- * @brief ilNormalPair - gaussian distributed pair of coordinates
+ * @brief il_NormalPair - gaussian distributed pair of coordinates
  * @param x,y - coordinates
  * @param xmean, ymean - mean of coordinated
  * @param xstd, ystd - sigma
  */
-void ilNormalPair(double *x, double *y, double xmean, double ymean, double xstd, double ystd){
+void il_NormalPair(double *x, double *y, double xmean, double ymean, double xstd, double ystd){
     if(!x || !y) return;
     double U = drand48(), V = drand48();
     double S = sqrt(-2*log(U));
@@ -50,11 +50,11 @@ void ilNormalPair(double *x, double *y, double xmean, double ymean, double xstd,
 
 static double step = 500., es = -1.;
 /**
- * @brief ilPoissonSetStep - change step value for ilPoisson algo
+ * @brief il_PoissonSetStep - change step value for il_Poisson algo
  * @param s - new step (>1)
  * @return TRUE if OK
  */
-int ilPoissonSetStep(double s){
+int il_PoissonSetStep(double s){
     if(s < 1.){
         WARNX("ilPoissonSetStep(): step should be > 1.");
         return FALSE;
@@ -65,11 +65,11 @@ int ilPoissonSetStep(double s){
 }
 
 /**
- * @brief ilPoisson - integer number with Poisson distribution
+ * @brief il_Poisson - integer number with Poisson distribution
  * @param lambda - mean (and dispersion) of distribution
  * @return number
  */
-int ilPoisson(double lambda){
+int il_Poisson(double lambda){
     if(es < 0.) es = exp(step);
     double L = lambda, p = 1.;
     int k = 0;
@@ -93,36 +93,36 @@ int ilPoisson(double lambda){
     type *d = (type*)I->data; \
     int wh = I->width * I->height; \
     for(int i = 0; i < wh; ++i, ++d){ \
-        type res = *d + ilPoisson(lambda); \
+        type res = *d + il_Poisson(lambda); \
         *d = (res >= *d) ? res : max; \
     }
 #define ADDPF(type) \
     type *d = (type*)I->data; \
     int wh = I->width * I->height; \
     for(int i = 0; i < wh; ++i, ++d){ \
-        *d += ilPoisson(lambda); \
+        *d += il_Poisson(lambda); \
     }
-static void add8p(ilImage *I, double lambda){
+static void add8p(il_Image *I, double lambda){
     ADDPU(uint8_t, 0xff);
 }
-static void add16p(ilImage *I, double lambda){
+static void add16p(il_Image *I, double lambda){
     ADDPU(uint16_t, 0xffff);
 }
-static void add32p(ilImage *I, double lambda){
+static void add32p(il_Image *I, double lambda){
     ADDPU(uint32_t, 0xffffffff);
 }
-static void addfp(ilImage *I, double lambda){
+static void addfp(il_Image *I, double lambda){
     ADDPF(float);
 }
-static void adddp(ilImage *I, double lambda){
+static void adddp(il_Image *I, double lambda){
     ADDPF(double);
 }
 /**
- * @brief ilImage_addPoisson - add poisson noice to each image pixel
+ * @brief il_Image_addPoisson - add poisson noice to each image pixel
  * @param I (inout) - image
  * @param lambda - lambda of noice
  */
-void ilImage_addPoisson(ilImage *I, double lambda){
+void il_Image_addPoisson(il_Image *I, double lambda){
     switch(I->type){
         case IMTYPE_U8:
             return add8p(I, lambda);
@@ -144,13 +144,13 @@ void ilImage_addPoisson(ilImage *I, double lambda){
     }
 }
 
-// the same as ilImage_addPoisson but for coloured image (add same noice to all three pixel colour components)
-void ilImg3_addPoisson(ilImg3 *I, double lambda){
+// the same as il_Image_addPoisson but for coloured image (add same noice to all three pixel colour components)
+void il_Img3_addPoisson(il_Img3 *I, double lambda){
     int wh = I->width * I->height * 3;
     uint8_t *id = (uint8_t*)I->data;
     //OMP_FOR() - only will be more slowly
     for(int i = 0; i < wh; i += 3){
-        uint8_t n = ilPoisson(lambda), *d = &id[i];
+        uint8_t n = il_Poisson(lambda), *d = &id[i];
         for(int j = 0; j < 3; ++j){
             uint8_t newval = d[j] + n;
             d[j] = (newval >= d[j]) ? newval : 255;

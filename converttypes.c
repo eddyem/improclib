@@ -28,8 +28,8 @@
  * @param W, H  - its size (in pixels!)
  * @return Image structure
  */
-ilImage *ilbin2Image(const uint8_t *image, int W, int H){
-    ilImage *ret = ilImage_new(W, H, IMTYPE_U8);
+il_Image *il_bin2Image(const uint8_t *image, int W, int H){
+    il_Image *ret = il_Image_new(W, H, IMTYPE_U8);
     int stride = (W + 7) / 8, s1 = (stride*8 == W) ? stride : stride - 1;
     uint8_t *data = (uint8_t*) ret->data;
     int rest = W - s1*8;
@@ -64,7 +64,7 @@ ilImage *ilbin2Image(const uint8_t *image, int W, int H){
  * @param bk         - background level (all values < bk will be 0, other will be 1)
  * @return allocated memory area with "packed" image
  */
-uint8_t *ilImage2bin(const ilImage *im, double bk){
+uint8_t *il_Image2bin(const il_Image *im, double bk){
     if(!im) return NULL;
     if(im->type != IMTYPE_U8){
         WARNX("ilImage2bin(): supported only 8-bit images");
@@ -127,36 +127,36 @@ uint8_t *ilImage2bin(const ilImage *im, double bk){
         } \
     }
 
-static uint8_t *Iu8(const ilImage *I, int nchannels){
+static uint8_t *Iu8(const il_Image *I, int nchannels){
     TRANSMACRO(uint8_t);
     return outp;
 }
-static uint8_t *Iu16(const ilImage *I, int nchannels){
+static uint8_t *Iu16(const il_Image *I, int nchannels){
     TRANSMACRO(uint16_t);
     return outp;
 }
-static uint8_t *Iu32(const ilImage *I, int nchannels){
+static uint8_t *Iu32(const il_Image *I, int nchannels){
     TRANSMACRO(uint32_t);
     return outp;
 }
-static uint8_t *If(const ilImage *I, int nchannels){
+static uint8_t *If(const il_Image *I, int nchannels){
     TRANSMACRO(float);
     return outp;
 }
-static uint8_t *Id(const ilImage *I, int nchannels){
+static uint8_t *Id(const il_Image *I, int nchannels){
     TRANSMACRO(double);
     return outp;
 }
 
 /**
- * @brief ilImage2u8 - linear transform for preparing file to save as JPEG or other type
+ * @brief il_Image2u8 - linear transform for preparing file to save as JPEG or other type
  * @param I - input image
  * @param nchannels - 1 or 3 colour channels
  * @return allocated here image for jpeg/png storing
  */
-uint8_t *ilImage2u8(ilImage *I, int nchannels){ // only 1 and 3 channels supported!
+uint8_t *il_Image2u8(il_Image *I, int nchannels){ // only 1 and 3 channels supported!
     if(!I || !I->data || (nchannels != 1 && nchannels != 3)) return NULL;
-    ilImage_minmax(I);
+    il_Image_minmax(I);
     //DBG("make linear transform %dx%d, %d channels", I->width, I->height, nchannels);
     switch(I->type){
         case IMTYPE_U8:
@@ -204,7 +204,7 @@ Image *ST2Im(const size_t *image, int W, int H){
  * @param W, H      - size of image in pixels
  * @return allocated memory area with copy of an image
  */
-size_t *ilbin2sizet(const uint8_t *image, int W, int H){
+size_t *il_bin2sizet(const uint8_t *image, int W, int H){
     size_t *ret = MALLOC(size_t, W * H);
     int W0 = (W + 7) / 8, s1 = W0 - 1;
     OMP_FOR()

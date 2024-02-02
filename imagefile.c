@@ -32,7 +32,7 @@
 typedef struct{
     const char signature[8];
     uint8_t len;
-    ilInputType it;
+    il_InputType it;
 } imsign;
 
 const imsign signatures[] = {
@@ -70,7 +70,7 @@ const int bytes[IMTYPE_AMOUNT] = {
 };
 
 // return amount of bytes per pixel for given image type
-int ilgetpixbytes(ilimtype_t type){
+int il_getpixbytes(il_imtype_t type){
     if(type >= IMTYPE_AMOUNT) return -1;
     return bytes[type];
 }
@@ -80,7 +80,7 @@ int ilgetpixbytes(ilimtype_t type){
  * @param f - opened image file structure
  * @return image type or T_WRONG
  */
-static ilInputType imtype(FILE *f){
+static il_InputType imtype(FILE *f){
     char signature[8];
     int x = fread(signature, 1, 7, f);
     DBG("x=%d", x);
@@ -103,11 +103,11 @@ static ilInputType imtype(FILE *f){
 }
 
 /**
- * @brief ilchkinput - check file/directory name
+ * @brief il_chkinput - check file/directory name
  * @param name - name of file or directory
  * @return type of `name`
  */
-ilInputType ilchkinput(const char *name){
+il_InputType il_chkinput(const char *name){
     DBG("input name: %s", name);
     struct stat fd_stat;
     if(stat(name, &fd_stat)){
@@ -129,25 +129,25 @@ ilInputType ilchkinput(const char *name){
         WARN("Can't open file %s", name);
         return T_WRONG;
     }
-    ilInputType tp = imtype(f);
+    il_InputType tp = imtype(f);
     DBG("Image type of %s is %d", name, tp);
     fclose(f);
     return tp;
 }
 
 /**
- * @brief ilu8toImage - convert uint8_t data to Image structure
+ * @brief il_u8toImage - convert uint8_t data to Image structure
  * @param data      - original image data
  * @param width     - image width
  * @param height    - image height
  * @param stride    - image width with alignment
  * @return Image structure (fully allocated, you can FREE(data) after it)
  */
-ilImage *ilu82Image(const uint8_t *data, int width, int height){
+il_Image *il_u82Image(const uint8_t *data, int width, int height){
     FNAME();
-    ilImage *outp = ilImage_new(width, height, IMTYPE_U8);
+    il_Image *outp = il_Image_new(width, height, IMTYPE_U8);
     memcpy(outp->data, data, width*height);
-    ilImage_minmax(outp);
+    il_Image_minmax(outp);
     return outp;
 }
 
@@ -156,50 +156,50 @@ ilImage *ilu82Image(const uint8_t *data, int width, int height){
  * @param name - filename
  * @return Image structure or NULL
  */
-static inline ilImage *im_loadmono(const char *name){
+static inline il_Image *im_loadmono(const char *name){
     int width, height, channels;
     uint8_t *img = stbi_load(name, &width, &height, &channels, 1);
     if(!img){
         WARNX("Error in loading the image %s\n", name);
         return NULL;
     }
-    ilImage *I = MALLOC(ilImage, 1);
+    il_Image *I = MALLOC(il_Image, 1);
     I->data = img;
     I->width = width;
     I->height = height;
     I->type = IMTYPE_U8;
     I->pixbytes = 1;
-    ilImage_minmax(I);
+    il_Image_minmax(I);
     return I;
 }
 
 /**
- * @brief ilImage_read - read image from any supported file type
+ * @brief il_Image_read - read image from any supported file type
  * @param name - path to image
  * @return image or NULL if failed
  */
-ilImage *ilImage_read(const char *name){
-    ilInputType tp = ilchkinput(name);
+il_Image *il_Image_read(const char *name){
+    il_InputType tp = il_chkinput(name);
     if(tp == T_DIRECTORY || tp == T_WRONG){
         WARNX("Bad file type to read");
         return NULL;
     }
-    ilImage *outp = im_loadmono(name);
+    il_Image *outp = im_loadmono(name);
     return outp;
 }
 
 /**
- * @brief ilImg3_read - read color image from file 'name'
+ * @brief il_Img3_read - read color image from file 'name'
  * @param name - input file name
  * @return image read or NULL if error
  */
-ilImg3 *ilImg3_read(const char *name){
-    ilInputType tp = ilchkinput(name);
+il_Img3 *il_Img3_read(const char *name){
+    il_InputType tp = il_chkinput(name);
     if(tp == T_DIRECTORY || tp == T_WRONG){
         WARNX("Bad file type to read");
         return NULL;
     }
-    ilImg3 *I = MALLOC(ilImg3, 1);
+    il_Img3 *I = MALLOC(il_Img3, 1);
     int channels;
     I->data = stbi_load(name, &I->width, &I->height, &channels, 3);
     if(!I->data){
@@ -210,36 +210,36 @@ ilImg3 *ilImg3_read(const char *name){
 }
 
 /**
- * @brief ilImage_new - allocate memory for new struct Image & Image->data
+ * @brief il_Image_new - allocate memory for new struct Image & Image->data
  * @param w, h - image size
  * @return data allocated here
  */
-ilImage *ilImage_new(int w, int h, ilimtype_t type){
+il_Image *il_Image_new(int w, int h, il_imtype_t type){
     if(w < 1 || h < 1) return NULL;
     if(type >= IMTYPE_AMOUNT) return NULL;
-    ilImage *o = MALLOC(ilImage, 1);
+    il_Image *o = MALLOC(il_Image, 1);
     o->width = w;
     o->height = h;
     o->type = type;
-    o->pixbytes = ilgetpixbytes(type);
+    o->pixbytes = il_getpixbytes(type);
     o->data = calloc(w*h, o->pixbytes);
     if(!o->data) ERR("calloc()");
     return o;
 }
 
 /**
- * @brief ilImage_sim - allocate memory for new empty Image with similar size & data type
+ * @brief il_Image_sim - allocate memory for new empty Image with similar size & data type
  * @param i - sample image
  * @return data allocated here (with empty keylist & zeros in data)
  */
-ilImage *ilImage_sim(const ilImage *i){
+il_Image *il_Image_sim(const il_Image *i){
     if(!i) return NULL;
-    ilImage *outp = ilImage_new(i->width, i->height, i->type);
+    il_Image *outp = il_Image_new(i->width, i->height, i->type);
     return outp;
 }
 
 // free image data
-void ilImage_free(ilImage **img){
+void il_Image_free(il_Image **img){
     if(!img || !*img) return;
     FREE((*img)->data);
     FREE(*img);
@@ -247,11 +247,11 @@ void ilImage_free(ilImage **img){
 
 
 /**
- * @brief ilhistogram8 - calculate image histogram for 8-bit image
+ * @brief il_histogram8 - calculate image histogram for 8-bit image
  * @param I - orig
  * @return 256 byte array
  */
-size_t *ilhistogram8(const ilImage *I){
+size_t *il_histogram8(const il_Image *I){
     if(!I || !I->data || I->type != IMTYPE_U8) return NULL;
     size_t *histogram = MALLOC(size_t, 256);
     int wh = I->width * I->height;
@@ -277,11 +277,11 @@ size_t *ilhistogram8(const ilImage *I){
 }
 
 /**
- * @brief ilhistogram16 - calculate image histogram for 16-bit image
+ * @brief il_histogram16 - calculate image histogram for 16-bit image
  * @param I - orig
  * @return 65536 byte array
  */
-size_t *ilhistogram16(const ilImage *I){
+size_t *il_histogram16(const il_Image *I){
     if(!I || !I->data || I->type != IMTYPE_U16) return NULL;
     size_t *histogram = MALLOC(size_t, 65536);
     int wh = I->width * I->height;
@@ -308,9 +308,9 @@ size_t *ilhistogram16(const ilImage *I){
  * @param bk (o)  - background value
  * @return 0 if error
  */
-int ilImage_background(ilImage *img, double *bkg){
+int il_Image_background(il_Image *img, double *bkg){
     if(!img || !img->data || !bkg) return FALSE;
-    ilImage_minmax(img);
+    il_Image_minmax(img);
     if(img->maxval == img->minval){
         WARNX("Zero or overilluminated image!");
         return FALSE;
@@ -319,11 +319,11 @@ int ilImage_background(ilImage *img, double *bkg){
     int histosize = 0;
     switch(img->type){
         case IMTYPE_U8:
-            histogram = ilhistogram8(img);
+            histogram = il_histogram8(img);
             histosize = 256;
         break;
         case IMTYPE_U16:
-            histogram = ilhistogram16(img);
+            histogram = il_histogram16(img);
             histosize = 65536;
         break;
         default:
@@ -375,12 +375,12 @@ int ilImage_background(ilImage *img, double *bkg){
  * @param throwpart - which part of black pixels (from all amount) to throw away
  * @return allocated here image for jpeg/png storing
  */
-uint8_t *ilequalize8(ilImage *I, int nchannels, double throwpart){
+uint8_t *il_equalize8(il_Image *I, int nchannels, double throwpart){
     if(!I || !I->data || (nchannels != 1 && nchannels != 3)) return NULL;
-    ilImage_minmax(I);
+    il_Image_minmax(I);
     int width = I->width, height = I->height;
     size_t stride = width*nchannels, S = height*stride;
-    size_t *orig_histo = ilhistogram8(I); // original hystogram (linear)
+    size_t *orig_histo = il_histogram8(I); // original hystogram (linear)
     if(!orig_histo) return NULL;
     uint8_t *outp = MALLOC(uint8_t, S);
     uint8_t eq_levls[256] = {0};   // levels to convert: newpix = eq_levls[oldpix]
@@ -436,12 +436,12 @@ uint8_t *ilequalize8(ilImage *I, int nchannels, double throwpart){
  * @param throwpart - which part of black pixels (from all amount) to throw away
  * @return allocated here image for jpeg/png storing
  */
-uint8_t *ilequalize16(ilImage *I, int nchannels, double throwpart){
+uint8_t *il_equalize16(il_Image *I, int nchannels, double throwpart){
     if(!I || !I->data || (nchannels != 1 && nchannels != 3)) return NULL;
-    ilImage_minmax(I);
+    il_Image_minmax(I);
     int width = I->width, height = I->height;
     size_t stride = width*nchannels, S = height*stride;
-    size_t *orig_histo = ilhistogram8(I); // original hystogram (linear)
+    size_t *orig_histo = il_histogram8(I); // original hystogram (linear)
     if(!orig_histo) return NULL;
     uint8_t *outp = MALLOC(uint8_t, S);
     uint16_t *eq_levls = MALLOC(uint16_t, 65536);   // levels to convert: newpix = eq_levls[oldpix]
@@ -486,7 +486,7 @@ uint8_t *ilequalize16(ilImage *I, int nchannels, double throwpart){
     return outp;
 }
 
-static void u8minmax(ilImage *I){
+static void u8minmax(il_Image *I){
     uint8_t *data = (uint8_t*)I->data;
     double min = *data, max = min;
     int wh = I->width * I->height;
@@ -508,7 +508,7 @@ static void u8minmax(ilImage *I){
     I->maxval = max;
     I->minval = min;
 }
-static void u16minmax(ilImage *I){
+static void u16minmax(il_Image *I){
     uint16_t *data = (uint16_t*)I->data;
     double min = *data, max = min;
     int wh = I->width * I->height;
@@ -530,7 +530,7 @@ static void u16minmax(ilImage *I){
     I->maxval = max;
     I->minval = min;
 }
-static void u32minmax(ilImage *I){
+static void u32minmax(il_Image *I){
     uint32_t *data = (uint32_t*)I->data;
     double min = *data, max = min;
     int wh = I->width * I->height;
@@ -552,7 +552,7 @@ static void u32minmax(ilImage *I){
     I->maxval = max;
     I->minval = min;
 }
-static void fminmax(ilImage *I){
+static void fminmax(il_Image *I){
     float *data = (float*)I->data;
     double min = *data, max = min;
     int wh = I->width * I->height;
@@ -574,7 +574,7 @@ static void fminmax(ilImage *I){
     I->maxval = max;
     I->minval = min;
 }
-static void dminmax(ilImage *I){
+static void dminmax(il_Image *I){
     double *data = (double*)I->data;
     double min = *data, max = min;
     int wh = I->width * I->height;
@@ -598,7 +598,7 @@ static void dminmax(ilImage *I){
 }
 
 // calculate extremal values of image data and store them in it
-void ilImage_minmax(ilImage *I){
+void il_Image_minmax(il_Image *I){
     if(!I || !I->data) return;
 #ifdef EBUG
     double t0 = dtime();
@@ -639,7 +639,7 @@ void ilImage_minmax(ilImage *I){
  * @param quality - jpeg quality
  * @return FALSE if failed
  */
-int ilwrite_jpg(const char *name, int w, int h, int ncolors, uint8_t *bytes, int quality){
+int il_write_jpg(const char *name, int w, int h, int ncolors, uint8_t *bytes, int quality){
     if(!bytes || !name || quality < 5 || quality > 100 || (ncolors != 1 && ncolors != 3) || w < 1 || h < 1) return FALSE;
     char *tmpnm = MALLOC(char, strlen(name) + 10);
     sprintf(tmpnm, "%s-tmp.jpg", name);
@@ -655,13 +655,13 @@ int ilwrite_jpg(const char *name, int w, int h, int ncolors, uint8_t *bytes, int
 }
 
 /**
- * @brief ilImg3_jpg - save Img3 as jpeg
+ * @brief il_Img3_jpg - save Img3 as jpeg
  * @param name - output file name
  * @param I3 - image
  * @param quality - jpeg quality
  * @return FALSE if failed
  */
-int ilImg3_jpg(const char *name, ilImg3 *I3, int quality){
+int il_Img3_jpg(const char *name, il_Img3 *I3, int quality){
     if(!name || quality < 5 || quality > 100 || !I3 || !I3->data || I3->width < 1 || I3->height < 1) return FALSE;
     char *tmpnm = MALLOC(char, strlen(name) + 10);
     sprintf(tmpnm, "%s-tmp.jpg", name);
@@ -685,7 +685,7 @@ int ilImg3_jpg(const char *name, ilImg3 *I3, int quality){
  * @param bytes - image data
  * @return FALSE if failed
  */
-int ilwrite_png(const char *name, int w, int h, int ncolors, uint8_t *bytes){
+int il_write_png(const char *name, int w, int h, int ncolors, uint8_t *bytes){
     if(!bytes || !name || (ncolors != 1 && ncolors != 3) || w < 1 || h < 1) return FALSE;
     char *tmpnm = MALLOC(char, strlen(name) + 10);
     sprintf(tmpnm, "%s-tmp.jpg", name);
@@ -701,13 +701,13 @@ int ilwrite_png(const char *name, int w, int h, int ncolors, uint8_t *bytes){
 }
 
 /**
- * @brief ilImg3_png - save Img3 as jpeg
+ * @brief il_Img3_png - save Img3 as jpeg
  * @param name - output file name
  * @param I3 - image
  * @param quality - jpeg quality
  * @return FALSE if failed
  */
-int ilImg3_png(const char *name, ilImg3 *I3){
+int il_Img3_png(const char *name, il_Img3 *I3){
     if(!name || !I3 || !I3->data || I3->width < 1 || I3->height < 1) return FALSE;
     char *tmpnm = MALLOC(char, strlen(name) + 10);
     sprintf(tmpnm, "%s-tmp.png", name);

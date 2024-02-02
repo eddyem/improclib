@@ -29,14 +29,14 @@ typedef struct{
     uint8_t *data;  // image data
     int width;      // width
     int height;     // height
-} ilImg3;
+} il_Img3;
 
 // 1-channel image - pattern
 typedef struct{
     uint8_t *data;  // image data
     int width;      // width
     int height;     // height
-} ilPattern;
+} il_Pattern;
 
 typedef enum{
     IMTYPE_U8,      // uint8_t
@@ -45,17 +45,17 @@ typedef enum{
     IMTYPE_F,       // float
     IMTYPE_D,       // double
     IMTYPE_AMOUNT
-} ilimtype_t;
+} il_imtype_t;
 
 typedef struct{
     int width;			// width
     int height;			// height
-    ilimtype_t type;    // data type
+    il_imtype_t type;    // data type
     int pixbytes;       // size of one pixel data (bytes)
     void *data;         // picture data
     double minval;      // extremal data values
     double maxval;
-} ilImage;
+} il_Image;
 
 // input file/directory type
 typedef enum{
@@ -68,88 +68,88 @@ typedef enum{
     T_FITS,     // only to check type: FITS are supported in fitsmaniplib
     T_GZIP,
     T_AMOUNT
-} ilInputType;
+} il_InputType;
 
 /*================================================================================*
  *                                converttypes.c                                  *
  *================================================================================*/
-ilImage *ilu82Image(const uint8_t *data, int width, int height);
-uint8_t *ilImage2u8(ilImage *I, int nchannels);
-ilImage *ilbin2Image(const uint8_t *image, int W, int H);
-uint8_t *ilImage2bin(const ilImage *im, double bk);
-size_t *ilbin2sizet(const uint8_t *image, int W, int H);
+il_Image *il_u82Image(const uint8_t *data, int width, int height);
+uint8_t *il_Image2u8(il_Image *I, int nchannels);
+il_Image *il_bin2Image(const uint8_t *image, int W, int H);
+uint8_t *il_Image2bin(const il_Image *im, double bk);
+size_t *il_bin2sizet(const uint8_t *image, int W, int H);
 
 /*================================================================================*
  *                                   draw.c                                       *
  *================================================================================*/
-extern const uint8_t ilColor_red[3], ilColor_green[3], ilColor_blue[3], ilColor_black[3], ilColor_white[3];
+extern const uint8_t il_Color_red[3], il_Color_green[3], il_Color_blue[3], il_Color_black[3], il_Color_white[3];
 
-ilPattern *ilPattern_new(int w, int h);
-void ilPattern_free(ilPattern **I);
-ilImg3 *ilImg3_new(int w, int h);
-void ilImg3_free(ilImg3 **I3);
+il_Pattern *il_Pattern_new(int w, int h);
+void il_Pattern_free(il_Pattern **I);
+il_Img3 *il_Img3_new(int w, int h);
+void il_Img3_free(il_Img3 **I3);
 
-ilPattern *ilPattern_cross(int w, int h);
-ilPattern *ilPattern_xcross(int w, int h);
-ilPattern *ilPattern_star(int w, int h, double fwhm, double beta);
-ilImage *ilImage_star(ilimtype_t type, int w, int h, double fwhm, double beta);
+il_Pattern *il_Pattern_cross(int w, int h);
+il_Pattern *il_Pattern_xcross(int w, int h);
+il_Pattern *il_Pattern_star(int w, int h, double fwhm, double beta);
+il_Image *il_Image_star(il_imtype_t type, int w, int h, double fwhm, double beta);
 
-void ilImage_addsub(ilImage *img, const ilImage *p, int xc, int yc, double weight);
-void ilImage_drawpix(ilImage *I, int x, int y, const void *val);
-void ilImage_drawline(ilImage *I, int x0, int y0, int x1, int y1, const void *val);
-void ilImage_drawcircle(ilImage *I, int x0, int y0, int R, const void *val);
+void il_Image_addsub(il_Image *img, const il_Image *p, int xc, int yc, double weight);
+void il_Image_drawpix(il_Image *I, int x, int y, const void *val);
+void il_Image_drawline(il_Image *I, int x0, int y0, int x1, int y1, const void *val);
+void il_Image_drawcircle(il_Image *I, int x0, int y0, int R, const void *val);
 
-void ilImg3_drawpattern(ilImg3 *img, const ilPattern *p, int xc, int yc, const uint8_t color[3]);
-void ilImg3_setcolor(uint8_t impixel[3], const uint8_t color[3]);
-void ilImg3_drawpix(ilImg3 *img, int x, int y, const uint8_t color[3]);
-void ilImg3_drawline(ilImg3 *img, int x0, int y0, int x1, int y1, const uint8_t color[3]);
-void ilImg3_drawcircle(ilImg3 *I, int x0, int y0, int R, const uint8_t color[3]);
-void ilImg3_drawgrid(ilImg3 *img, int x0, int y0, int xstep, int ystep, const uint8_t color[3]);
+void il_Img3_drawpattern(il_Img3 *img, const il_Pattern *p, int xc, int yc, const uint8_t color[3]);
+void il_Img3_setcolor(uint8_t impixel[3], const uint8_t color[3]);
+void il_Img3_drawpix(il_Img3 *img, int x, int y, const uint8_t color[3]);
+void il_Img3_drawline(il_Img3 *img, int x0, int y0, int x1, int y1, const uint8_t color[3]);
+void il_Img3_drawcircle(il_Img3 *I, int x0, int y0, int R, const uint8_t color[3]);
+void il_Img3_drawgrid(il_Img3 *img, int x0, int y0, int xstep, int ystep, const uint8_t color[3]);
 
-ilImg3 *ilImg3_subimage(const ilImg3 *I, int x0, int y0, int x1, int y1);
+il_Img3 *il_Img3_subimage(const il_Img3 *I, int x0, int y0, int x1, int y1);
 
 /*================================================================================*
  *                                 imagefile.c                                    *
  *================================================================================*/
-int ilgetpixbytes(ilimtype_t type);
-void ilImage_minmax(ilImage *I);
-uint8_t *ilequalize8(ilImage *I, int nchannels, double throwpart);
-uint8_t *ilequalize16(ilImage *I, int nchannels, double throwpart);
+int il_getpixbytes(il_imtype_t type);
+void il_Image_minmax(il_Image *I);
+uint8_t *il_equalize8(il_Image *I, int nchannels, double throwpart);
+uint8_t *il_equalize16(il_Image *I, int nchannels, double throwpart);
 
-ilInputType ilchkinput(const char *name);
-ilImage *ilImage_read(const char *name);
-ilImage *ilImage_new(int w, int h, ilimtype_t type);
-ilImage *ilImage_sim(const ilImage *i);
-void ilImage_free(ilImage **I);
+il_InputType il_chkinput(const char *name);
+il_Image *il_Image_read(const char *name);
+il_Image *il_Image_new(int w, int h, il_imtype_t type);
+il_Image *il_Image_sim(const il_Image *i);
+void il_Image_free(il_Image **I);
 
-size_t *ilhistogram8(const ilImage *I);
-size_t *ilhistogram16(const ilImage *I);
-int ilImage_background(ilImage *img, double *bkg);
+size_t *il_histogram8(const il_Image *I);
+size_t *il_histogram16(const il_Image *I);
+int il_Image_background(il_Image *img, double *bkg);
 
-ilImg3 *ilImg3_read(const char *name);
-int ilImg3_jpg(const char *name, ilImg3 *I3, int quality);
-int ilImg3_png(const char *name, ilImg3 *I3);
-int ilwrite_jpg(const char *name, int w, int h, int ncolors, uint8_t *bytes, int quality);
-int ilwrite_png(const char *name, int w, int h, int ncolors, uint8_t *bytes);
+il_Img3 *il_Img3_read(const char *name);
+int il_Img3_jpg(const char *name, il_Img3 *I3, int quality);
+int il_Img3_png(const char *name, il_Img3 *I3);
+int il_write_jpg(const char *name, int w, int h, int ncolors, uint8_t *bytes, int quality);
+int il_write_png(const char *name, int w, int h, int ncolors, uint8_t *bytes);
 
 /*================================================================================*
  *                                letters.c                                       *
  *================================================================================*/
-int ilImage_putstring(ilImage *I, const char *str, int x, int y);
-int ilImg3_putstring(ilImg3 *I, const char *str, int x, int y, const uint8_t color[3]);
+int il_Image_putstring(il_Image *I, const char *str, int x, int y);
+int il_Img3_putstring(il_Img3 *I, const char *str, int x, int y, const uint8_t color[3]);
 
 
 /*================================================================================*
  *                                random.c                                        *
  *================================================================================*/
-double ilNormalBase();
-double ilNormal(double mean, double std);
-void ilNormalPair(double *x, double *y, double xmean, double ymean, double xstd, double ystd);
+double il_NormalBase();
+double il_Normal(double mean, double std);
+void il_NormalPair(double *x, double *y, double xmean, double ymean, double xstd, double ystd);
 
-int ilPoissonSetStep(double s);
-int ilPoisson(double lambda);
-void ilImage_addPoisson(ilImage *I, double lambda);
-void ilImg3_addPoisson(ilImg3 *I, double lambda);
+int il_PoissonSetStep(double s);
+int il_Poisson(double lambda);
+void il_Image_addPoisson(il_Image *I, double lambda);
+void il_Img3_addPoisson(il_Img3 *I, double lambda);
 
 /*================================================================================*
  *                                    binmorph.c                                  *
@@ -165,34 +165,34 @@ typedef struct{
     uint16_t ymin;
     uint16_t ymax;
     uint32_t area; // total amount of object pixels inside the box
-} ilBox;
+} il_Box;
 
 typedef struct{
     size_t Nobj;
-    ilBox *boxes;
-} ilConnComps;
+    il_Box *boxes;
+} il_ConnComps;
 
 // morphological operations:
-uint8_t *ildilation(const uint8_t *image, int W, int H);
-uint8_t *ildilationN(const uint8_t *image, int W, int H, int N);
-uint8_t *ilerosion(const uint8_t *image, int W, int H);
-uint8_t *ilerosionN(const uint8_t *image, int W, int H, int N);
-uint8_t *ilopeningN(uint8_t *image, int W, int H, int N);
-uint8_t *ilclosingN(uint8_t *image, int W, int H, int N);
-uint8_t *iltopHat(uint8_t *image, int W, int H, int N);
-uint8_t *ilbotHat(uint8_t *image, int W, int H, int N);
+uint8_t *il_dilation(const uint8_t *image, int W, int H);
+uint8_t *il_dilationN(const uint8_t *image, int W, int H, int N);
+uint8_t *il_erosion(const uint8_t *image, int W, int H);
+uint8_t *il_erosionN(const uint8_t *image, int W, int H, int N);
+uint8_t *il_openingN(uint8_t *image, int W, int H, int N);
+uint8_t *il_closingN(uint8_t *image, int W, int H, int N);
+uint8_t *il_topHat(uint8_t *image, int W, int H, int N);
+uint8_t *il_botHat(uint8_t *image, int W, int H, int N);
 
 // logical operations
-uint8_t *ilimand(uint8_t *im1, uint8_t *im2, int W, int H);
-uint8_t *ilsubstim(uint8_t *im1, uint8_t *im2, int W, int H);
+uint8_t *il_imand(uint8_t *im1, uint8_t *im2, int W, int H);
+uint8_t *il_substim(uint8_t *im1, uint8_t *im2, int W, int H);
 
 // clear non 4-connected pixels
-uint8_t *ilfilter4(uint8_t *image, int W, int H);
+uint8_t *il_filter4(uint8_t *image, int W, int H);
 // clear single pixels
-uint8_t *ilfilter8(uint8_t *image, int W, int H);
+uint8_t *il_filter8(uint8_t *image, int W, int H);
 
-size_t *ilCClabel4(uint8_t *Img, int W, int H, ilConnComps **CC);
-//size_t *ilcclabel8(uint8_t *Img, int W, int H, size_t *Nobj);
+size_t *il_CClabel4(uint8_t *Img, int W, int H, il_ConnComps **CC);
+//size_t *il_cclabel8(uint8_t *Img, int W, int H, size_t *Nobj);
 
 /*================================================================================*
  *                                                                                *

@@ -65,7 +65,7 @@ static void morph_init(){
  * @param W, H      - size of binarized image (in pixels)
  * @return allocated memory area with converted input image
  */
-uint8_t *ilfilter4(uint8_t *image, int W, int H){
+uint8_t *il_filter4(uint8_t *image, int W, int H){
     //FNAME();
     if(W < MINWIDTH || H < MINHEIGHT) return NULL;
     uint8_t *ret = MALLOC(uint8_t, W*H);
@@ -96,7 +96,7 @@ uint8_t *ilfilter4(uint8_t *image, int W, int H){
  * @param W, H      - size of binarized image (in pixels)
  * @return allocated memory area with converted input image
  */
-uint8_t *ilfilter8(uint8_t *image, int W, int H){
+uint8_t *il_filter8(uint8_t *image, int W, int H){
     //FNAME();
     if(W < MINWIDTH || H < MINHEIGHT) return NULL;
     uint8_t *ret = MALLOC(uint8_t, W*H);
@@ -124,7 +124,7 @@ uint8_t *ilfilter8(uint8_t *image, int W, int H){
  * @param W, H      - size of image (pixels)
  * @return allocated memory area with dilation of input image
  */
-uint8_t *ildilation(const uint8_t *image, int W, int H){
+uint8_t *il_dilation(const uint8_t *image, int W, int H){
     //FNAME();
     if(W < MINWIDTH || H < MINHEIGHT) return NULL;
     int W0 = (W + 7) / 8; // width in bytes
@@ -189,7 +189,7 @@ static void mkerosion(const uint8_t *in, uint8_t *out, int W, int H){
  * @param W, H      - size of image (in pixels)
  * @return allocated memory area with erosion of input image
  */
-uint8_t *ilerosion(const uint8_t *image, int W, int H){
+uint8_t *il_erosion(const uint8_t *image, int W, int H){
     if(W < MINWIDTH || H < MINHEIGHT) return NULL;
     int W0 = (W + 7) / 8; // width in bytes
     uint8_t *ret = MALLOC(uint8_t, W0*H);
@@ -197,7 +197,7 @@ uint8_t *ilerosion(const uint8_t *image, int W, int H){
     return ret;
 }
 // Make erosion N times
-uint8_t *ilerosionN(const uint8_t *image, int W, int H, int N){
+uint8_t *il_erosionN(const uint8_t *image, int W, int H, int N){
     if(W < MINWIDTH || H < MINHEIGHT || N < 1) return NULL;
     int W0 = (W + 7) / 8, sz = W0*H;
     uint8_t *in = MALLOC(uint8_t, sz), *out = MALLOC(uint8_t, sz);
@@ -211,11 +211,11 @@ uint8_t *ilerosionN(const uint8_t *image, int W, int H, int N){
     return out;
 }
 // Make dilation N times
-uint8_t *ildilationN(const uint8_t *image, int W, int H, int N){
+uint8_t *il_dilationN(const uint8_t *image, int W, int H, int N){
     if(W < MINWIDTH || H < MINHEIGHT || N < 1) return NULL;
     uint8_t *cur = (uint8_t*)image, *next = NULL;
     for(int i = 0; i < N; ++i){
-        next = ildilation(cur, W, H);
+        next = il_dilation(cur, W, H);
         if(cur != image) FREE(cur);
         cur = next;
     }
@@ -223,30 +223,30 @@ uint8_t *ildilationN(const uint8_t *image, int W, int H, int N){
 }
 
 // Ntimes opening
-uint8_t *ilopeningN(uint8_t *image, int W, int H, int N){
+uint8_t *il_openingN(uint8_t *image, int W, int H, int N){
     //FNAME();
     if(W < MINWIDTH || H < MINHEIGHT || N < 1) return NULL;
-    uint8_t *er = ilerosionN(image, W, H, N);
-    uint8_t *op = ildilationN(er, W, H, N);
+    uint8_t *er = il_erosionN(image, W, H, N);
+    uint8_t *op = il_dilationN(er, W, H, N);
     FREE(er);
     return op;
 }
 
 // Ntimes closing
-uint8_t *ilclosingN(uint8_t *image, int W, int H, int N){
+uint8_t *il_closingN(uint8_t *image, int W, int H, int N){
     //FNAME();
     if(W < MINWIDTH || H < MINHEIGHT || N < 1) return NULL;
-    uint8_t *di = ildilationN(image, W, H, N);
-    uint8_t *cl = ilerosionN(di, W, H, N);
+    uint8_t *di = il_dilationN(image, W, H, N);
+    uint8_t *cl = il_erosionN(di, W, H, N);
     FREE(di);
     return cl;
 }
 
 // top hat operation: image - opening(image)
-uint8_t *iltopHat(uint8_t *image, int W, int H, int N){
+uint8_t *il_topHat(uint8_t *image, int W, int H, int N){
     //FNAME();
     if(W < MINWIDTH || H < MINHEIGHT || N < 1) return NULL;
-    uint8_t *op = ilopeningN(image, W, H, N);
+    uint8_t *op = il_openingN(image, W, H, N);
     int W0 = (W + 7) / 8; // width in bytes
     int wh = W0 * H;
     OMP_FOR()
@@ -256,10 +256,10 @@ uint8_t *iltopHat(uint8_t *image, int W, int H, int N){
 }
 
 // bottom hat operation: closing(image) - image
-uint8_t *ilbotHat(uint8_t *image, int W, int H, int N){
+uint8_t *il_botHat(uint8_t *image, int W, int H, int N){
     //FNAME();
     if(W < MINWIDTH || H < MINHEIGHT || N < 1) return NULL;
-    uint8_t *op = ilclosingN(image, W, H, N);
+    uint8_t *op = il_closingN(image, W, H, N);
     int W0 = (W + 7) / 8; // width in bytes
     int wh = W0 * H;
     OMP_FOR()
@@ -281,7 +281,7 @@ uint8_t *ilbotHat(uint8_t *image, int W, int H, int N){
  * @param W, H         - their size (of course, equal for both images)
  * @return allocated memory area with   image = (im1 AND im2)
  */
-uint8_t *ilimand(uint8_t *im1, uint8_t *im2, int W, int H){
+uint8_t *il_imand(uint8_t *im1, uint8_t *im2, int W, int H){
     uint8_t *ret = MALLOC(uint8_t, W*H);
     int y;
     OMP_FOR()
@@ -300,7 +300,7 @@ uint8_t *ilimand(uint8_t *im1, uint8_t *im2, int W, int H){
  * @param W, H         - their size (of course, equal for both images)
  * @return allocated memory area with    image = (im1 AND (!im2))
  */
-uint8_t *ilsubstim(uint8_t *im1, uint8_t *im2, int W, int H){
+uint8_t *il_substim(uint8_t *im1, uint8_t *im2, int W, int H){
     uint8_t *ret = MALLOC(uint8_t, W*H);
     int y;
     OMP_FOR()
@@ -346,12 +346,12 @@ static inline void remark(size_t newval, size_t oldval, size_t *assoc){
  * @param CC (o)   - connected components boxes (numeration starts from 1!!!), so first box is CC->box[1], amount of boxes is CC->Nobj-1 !!!
  * @return an array of labeled components
  */
-size_t *ilCClabel4(uint8_t *Img, int W, int H, ilConnComps **CC){
+size_t *il_CClabel4(uint8_t *Img, int W, int H, il_ConnComps **CC){
     size_t *assoc;
     if(W < MINWIDTH || H < MINHEIGHT) return NULL;
-    uint8_t *f = ilfilter4(Img, W, H); // remove all non 4-connected pixels
+    uint8_t *f = il_filter4(Img, W, H); // remove all non 4-connected pixels
     //DBG("convert to size_t");
-    size_t *labels = ilbin2sizet(f, W, H);
+    size_t *labels = il_bin2sizet(f, W, H);
     FREE(f);
     //DBG("Calculate");
     size_t Nmax = W*H/4; // max number of 4-connected labels
@@ -414,7 +414,7 @@ size_t *ilCClabel4(uint8_t *Img, int W, int H, ilConnComps **CC){
     for(size_t i = 1; i < last_assoc_idx; ++i)
         printf("%zd\t%zd\t%zd\n",i,assoc[i],indexes[i]);
     #endif
-    ilBox *boxes = MALLOC(ilBox, cidx);
+    il_Box *boxes = MALLOC(il_Box, cidx);
     OMP_FOR()
     for(size_t i = 1; i < cidx; ++i){ // init borders
         boxes[i].xmin = W;
@@ -422,7 +422,7 @@ size_t *ilCClabel4(uint8_t *Img, int W, int H, ilConnComps **CC){
     }
 #pragma omp parallel shared(boxes)
     {
-        ilBox *l_boxes = MALLOC(ilBox, cidx);
+        il_Box *l_boxes = MALLOC(il_Box, cidx);
         for(size_t i = 1; i < cidx; ++i){ // init borders
             l_boxes[i].xmin = W;
             l_boxes[i].ymin = H;
@@ -434,7 +434,7 @@ size_t *ilCClabel4(uint8_t *Img, int W, int H, ilConnComps **CC){
             if(!*lptr) continue;
             register size_t mark = indexes[*lptr];
             *lptr = mark;
-            ilBox *b = &l_boxes[mark];
+            il_Box *b = &l_boxes[mark];
             ++b->area;
             if(b->xmax < x) b->xmax = x;
             if(b->xmin > x) b->xmin = x;
@@ -444,7 +444,7 @@ size_t *ilCClabel4(uint8_t *Img, int W, int H, ilConnComps **CC){
     }
     #pragma omp critical
     for(size_t i = 1; i < cidx; ++i){
-        ilBox *ob = &boxes[i], *ib = &l_boxes[i];
+        il_Box *ob = &boxes[i], *ib = &l_boxes[i];
         if(ob->xmax < ib->xmax) ob->xmax = ib->xmax;
         if(ob->xmin > ib->xmin) ob->xmin = ib->xmin;
         if(ob->ymax < ib->ymax) ob->ymax = ib->ymax;
@@ -463,7 +463,7 @@ size_t *ilCClabel4(uint8_t *Img, int W, int H, ilConnComps **CC){
     }printf("\n\n");
 #endif
     if(CC){
-        *CC = MALLOC(ilConnComps, 1);
+        *CC = MALLOC(il_ConnComps, 1);
         (*CC)->Nobj = cidx; (*CC)->boxes = boxes;
     }else{
         FREE(boxes);

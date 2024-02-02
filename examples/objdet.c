@@ -43,47 +43,47 @@ int main(int argc, char **argv){
     parseargs(&argc, &argv, cmdlnopts);
     if(help) showhelp(-1, cmdlnopts);
     if(!infile) ERRX("Point name of input file");
-    ilImage *I = ilImage_read(infile);
+    il_Image *I = il_Image_read(infile);
     if(!I) ERR("Can't read %s", infile);
-    if(bg < 0. && !ilImage_background(I, &bg)) ERRX("Can't calculate background");
+    if(bg < 0. && !il_Image_background(I, &bg)) ERRX("Can't calculate background");
     uint8_t ibg = (int)(bg + 0.5);
     printf("Background level: %d\n", ibg);
     int w = I->width, h = I->height, wh = w*h;
-    ilImage *Ibg = ilImage_sim(I);
+    il_Image *Ibg = il_Image_sim(I);
     memcpy(Ibg->data, I->data, wh);
     uint8_t *idata = (uint8_t*) Ibg->data;
     for(int i = 0; i < wh; ++i) idata[i] = (idata[i] > ibg) ? idata[i] - ibg : 0;
-    if(outbg) ilwrite_jpg(outbg, Ibg->width, Ibg->height, 1, idata, 95);
+    if(outbg) il_write_jpg(outbg, Ibg->width, Ibg->height, 1, idata, 95);
     double t0 = dtime();
-    uint8_t *Ibin = ilImage2bin(I, bg);
+    uint8_t *Ibin = il_Image2bin(I, bg);
     if(!Ibin) ERRX("Can't binarize image");
     green("Binarization: %gms\n", 1e3*(dtime()-t0));
     if(neros > 0){
         t0 = dtime();
-        uint8_t *eros = ilerosionN(Ibin, w, h, neros);
+        uint8_t *eros = il_erosionN(Ibin, w, h, neros);
         FREE(Ibin);
         Ibin = eros;
         green("%d erosions: %gms\n", neros, 1e3*(dtime()-t0));
     }
     if(ndilat > 0){
         t0 = dtime();
-        uint8_t *dilat = ildilationN(Ibin, w, h, ndilat);
+        uint8_t *dilat = il_dilationN(Ibin, w, h, ndilat);
         FREE(Ibin);
         Ibin = dilat;
         green("%d dilations: %gms\n", ndilat, 1e3*(dtime()-t0));
     }
     if(outbin){
-        ilImage *tmp = ilbin2Image(Ibin, w, h);
-        ilwrite_jpg(outbin, tmp->width, tmp->height, 1, (uint8_t*)tmp->data, 95);
-        ilImage_free(&tmp);
+        il_Image *tmp = il_bin2Image(Ibin, w, h);
+        il_write_jpg(outbin, tmp->width, tmp->height, 1, (uint8_t*)tmp->data, 95);
+        il_Image_free(&tmp);
     }
-    ilConnComps *comps;
+    il_ConnComps *comps;
     t0 = dtime();
-    size_t *labels = ilCClabel4(Ibin, w, h, &comps);
+    size_t *labels = il_CClabel4(Ibin, w, h, &comps);
     green("Labeling: %gms\n", 1e3*(dtime()-t0));
     if(labels && comps->Nobj > 1){
         printf("Detected %zd components\n", comps->Nobj-1);
-        ilBox *box = comps->boxes + 1;
+        il_Box *box = comps->boxes + 1;
         for(size_t i = 1; i < comps->Nobj; ++i, ++box){
             printf("\t%4zd: s=%d, LU=(%d, %d), RD=(%d, %d)\n", i, box->area, box->xmin, box->ymin, box->xmax, box->ymax);
         }

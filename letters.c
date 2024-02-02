@@ -133,14 +133,14 @@ static const uint8_t letters[95][13] = {
     }
 
 /**
- * @brief ilImage_putstring - print text string over image
+ * @brief il_Image_putstring - print text string over image
  * @param I - image
  * @param str - zero-terminated sring
  * @param x - x coordinate of left bottom text angle
  * @param y - y (upside down)
  * @return
  */
-int ilImage_putstring(ilImage *I, const char *str, int x, int y){
+int il_Image_putstring(il_Image *I, const char *str, int x, int y){
     int c;
     if(x >= I->width || y < 1 || y > I->height + 12) return FALSE;
     int startx = x;
@@ -181,8 +181,8 @@ int ilImage_putstring(ilImage *I, const char *str, int x, int y){
     return TRUE;
 }
 
-// the same as ilImage_putstring but with given color
-int ilImg3_putstring(ilImg3 *I, const char *str, int x, int y, const uint8_t color[3]){
+// the same as il_Image_putstring but with given color
+int il_Img3_putstring(il_Img3 *I, const char *str, int x, int y, const uint8_t color[3]){
     int c;
     if(x >= I->width || y < 1 || y > I->height + 12) return FALSE;
     int startx = x;
@@ -203,7 +203,7 @@ int ilImg3_putstring(ilImg3 *I, const char *str, int x, int y, const uint8_t col
             uint8_t l = *letter;
             for(int curx = x; curx < x+8; ++curx, data+=3, l <<= 1){ if(curx >= I->width) break; if(curx < 0) continue;
                 if(l & 0x80){ // foreground - set to it given color or its negative
-                    ilImg3_setcolor(data, color);
+                    il_Img3_setcolor(data, color);
                 }
             }
         }

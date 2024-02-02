@@ -25,7 +25,7 @@ static int w = 1024, h = 1024, help = 0;
 static double fwhm = 3.5, beta = 1.;
 static char *outp = "output.png", *inp = NULL;
 
-static ilImage *star = NULL;
+static il_Image *star = NULL;
 
 static myoption cmdlnopts[] = {
     {"help",    NO_ARGS,    NULL,   '?',    arg_int,    APTR(&help),    "show this help"},
@@ -57,15 +57,15 @@ static int getpars(const char *argv, int *x, int *y, double *w){
     return TRUE;
 }
 
-static void addstar(ilImage *I, const char *str){
+static void addstar(il_Image *I, const char *str){
     int x, y;
     double w;
     if(!getpars(str, &x, &y, &w)) return;
     printf("Add 'star' at %d,%d (weight=%g)\n", x,y,w);
-    ilImage_addsub(I, star, x, y, w);
+    il_Image_addsub(I, star, x, y, w);
 }
 
-static void addfromfile(ilImage *I){
+static void addfromfile(il_Image *I){
     FILE *f = fopen(inp, "r");
     if(!f){
         WARN("Can't open %s", inp);
@@ -85,30 +85,30 @@ int main(int argc, char **argv){
     if(help) showhelp(-1, cmdlnopts);
     if(w < 1 || h < 1) ERRX("Wrong image size");
     if(argc == 0 && inp == NULL) ERRX("Point at least one coordinate pair or file name");
-    ilImage *I = ilImage_new(w, h, IMTYPE_U16);
+    il_Image *I = il_Image_new(w, h, IMTYPE_U16);
     if(!I) ERRX("Can't create image %dx%d pixels", w, h);
     int par = (int)(fwhm*25.);
-    star = ilImage_star(IMTYPE_U16, par, par, fwhm, beta);
+    star = il_Image_star(IMTYPE_U16, par, par, fwhm, beta);
     if(!star) ERRX("Can't create 'star' pattern");
     for(int i = 0; i < argc; ++i) addstar(I, argv[i]);
     if(inp) addfromfile(I);
-    ilImage_free(&star);
-    ilImage_putstring(I, "Hello, world!!", -10, 10);
-    ilImage_putstring(I, "0", 0, 1016);
-    ilImage_putstring(I, "Hello, world.!?\"'\nMore again", 50, 500);
-    ilImage_putstring(I, "Hello, world!", 950, 1018);
+    il_Image_free(&star);
+    il_Image_putstring(I, "Hello, world!!", -10, 10);
+    il_Image_putstring(I, "0", 0, 1016);
+    il_Image_putstring(I, "Hello, world.!?\"'\nMore again", 50, 500);
+    il_Image_putstring(I, "Hello, world!", 950, 1018);
     uint16_t v = 50000;
-    ilImage_drawline(I, -100,-1000, 1000, 1200, &v);
-    ilImage_drawcircle(I, 1000,1000, 1000, &v);
-    ilImage_drawcircle(I, 512,512, 512, &v);
+    il_Image_drawline(I, -100,-1000, 1000, 1200, &v);
+    il_Image_drawcircle(I, 1000,1000, 1000, &v);
+    il_Image_drawcircle(I, 512,512, 512, &v);
     for(int _ = 0; _ < 1024; _ += 50){
         char s[6];
         snprintf(s, 6, "%d", _);
-        ilImage_putstring(I, s, _, 300);
+        il_Image_putstring(I, s, _, 300);
     }
-    uint8_t *bytes = ilImage2u8(I, 1);
-    int ret = ilwrite_png(outp, I->width, I->height, 1, bytes);
-    ilImage_free(&I);
+    uint8_t *bytes = il_Image2u8(I, 1);
+    int ret = il_write_png(outp, I->width, I->height, 1, bytes);
+    il_Image_free(&I);
     FREE(bytes);
     if(!ret) return 4;
     printf("File %s ready\n", outp);

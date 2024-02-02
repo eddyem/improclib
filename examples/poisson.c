@@ -39,16 +39,16 @@ int main(int argc, char **argv){
     if(help) showhelp(-1, cmdlnopts);
     if(w < 1 || h < 1) ERRX("Wrong image size");
     if(lambda < 1.) ERRX("LAMBDA should be >=1");
-    ilImage *I = ilImage_new(w, h, IMTYPE_U8);
+    il_Image *I = il_Image_new(w, h, IMTYPE_U8);
     if(!I) ERRX("Can't create image %dx%d pixels", w, h);
     int npix = I->height * I->width;
     uint8_t *d = I->data;
     for(int i = 0; i < npix; ++i, ++d){
-        int ampl = ilPoisson(lambda);
+        int ampl = il_Poisson(lambda);
         *d = ampl < 255 ? ampl : 255;
     }
-    int ret = ilwrite_png(outp, I->width, I->height, 1, I->data);
-    ilImage_free(&I);
+    int ret = il_write_png(outp, I->width, I->height, 1, I->data);
+    il_Image_free(&I);
     if(!ret) return 1;
     printf("File %s ready\n", outp);
     return 0;

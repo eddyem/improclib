@@ -32,15 +32,15 @@
 
 // base colors:
 const uint8_t
-    ilColor_red[3] = {255, 0, 0},
-    ilColor_green[3] = {0, 255, 0},
-    ilColor_blue[3] = {0, 0, 255},
-    ilColor_black[3] = {0, 0, 0},
-    ilColor_white[3] = {255,255,255};
+il_Color_red[3] = {255, 0, 0},
+il_Color_green[3] = {0, 255, 0},
+il_Color_blue[3] = {0, 0, 255},
+il_Color_black[3] = {0, 0, 0},
+il_Color_white[3] = {255,255,255};
 
-ilImg3 *ilImg3_new(int w, int h){
+il_Img3 *il_Img3_new(int w, int h){
     if(w < 1 || h < 1) return NULL;
-    ilImg3 *o = MALLOC(ilImg3, 1);
+    il_Img3 *o = MALLOC(il_Img3, 1);
     if(!o) return NULL;
     o->data = MALLOC(uint8_t, 3*w*h);
     if(!o->data){
@@ -51,15 +51,15 @@ ilImg3 *ilImg3_new(int w, int h){
     o->height = h;
     return o;
 }
-void ilImg3_free(ilImg3 **I){
+void il_Img3_free(il_Img3 **I){
     if(!I || !*I) return;
     FREE((*I)->data);
     FREE(*I);
 }
 
-ilPattern *ilPattern_new(int w, int h){
+il_Pattern *il_Pattern_new(int w, int h){
     if(w < 1 || h < 1) return NULL;
-    ilPattern *o = MALLOC(ilPattern, 1);
+    il_Pattern *o = MALLOC(il_Pattern, 1);
     if(!o) return NULL;
     o->data = MALLOC(uint8_t, w*h);
     if(!o->data){
@@ -70,16 +70,16 @@ ilPattern *ilPattern_new(int w, int h){
     o->height = h;
     return o;
 }
-void ilPattern_free(ilPattern **I){
+void il_Pattern_free(il_Pattern **I){
     if(!I || !*I) return;
     FREE((*I)->data);
     FREE(*I);
 }
 
 // make a single-channel (opaque) mask for cross; allocated here!!!
-ilPattern *ilPattern_cross(int w, int h){
+il_Pattern *il_Pattern_cross(int w, int h){
     int hmid = h/2, wmid = w/2;
-    ilPattern *p = ilPattern_new(w, h);
+    il_Pattern *p = il_Pattern_new(w, h);
     if(!p) return NULL;
     uint8_t *ptr = &p->data[wmid];
     for(int y = 0; y < h; ++y, ptr += w) *ptr = 255;
@@ -89,9 +89,9 @@ ilPattern *ilPattern_cross(int w, int h){
 }
 
 // complicated cross
-ilPattern *ilPattern_xcross(int w, int h){
+il_Pattern *il_Pattern_xcross(int w, int h){
     int hmid = h/2, wmid = w/2;
-    ilPattern *p = ilPattern_new(w, h);
+    il_Pattern *p = il_Pattern_new(w, h);
     if(!p) return NULL;
     uint8_t *data = p->data;
     data[hmid*w + wmid] = 255; // point @ center
@@ -123,16 +123,16 @@ for(int y = 0; y < h; ++y){ \
 }
 
 /**
- * @brief ilPattern_star - create pseudo-star Moffat pattern with max ampl. 255 and given FWHM
+ * @brief il_Pattern_star - create pseudo-star Moffat pattern with max ampl. 255 and given FWHM
  * @param w - width
  * @param h - height
  * @param fwhm - FWHM
  * @param beta - `beta` parameter of Moffat
  * @return pattern or NULL if error
  */
-ilPattern *ilPattern_star(int w, int h, double fwhm, double beta){
+il_Pattern *il_Pattern_star(int w, int h, double fwhm, double beta){
     if(fwhm < 1.) return NULL;
-    ilPattern *p = ilPattern_new(w, h);
+    il_Pattern *p = il_Pattern_new(w, h);
     if(!p) return NULL;
     int w2 = w/2, h2 = h/2; // center of image
     double hwhm = fwhm / 2., theta2 = hwhm*hwhm;
@@ -141,7 +141,7 @@ ilPattern *ilPattern_star(int w, int h, double fwhm, double beta){
 }
 
 /**
- * @brief ilImage_star - generate subimage with 'star'; max amplitude for float and double == 1.
+ * @brief il_Image_star - generate subimage with 'star'; max amplitude for float and double == 1.
  * @param type - image type
  * @param w - image width
  * @param h - height
@@ -149,9 +149,9 @@ ilPattern *ilPattern_star(int w, int h, double fwhm, double beta){
  * @param beta - beta parameter
  * @return
  */
-ilImage *ilImage_star(ilimtype_t type, int w, int h, double fwhm, double beta){
+il_Image *il_Image_star(il_imtype_t type, int w, int h, double fwhm, double beta){
     if(fwhm < 1.) return NULL;
-    ilImage *p = ilImage_new(w, h, type);
+    il_Image *p = il_Image_new(w, h, type);
     if(!p) return NULL;
     int w2 = w/2, h2 = h/2;
     double hwhm = fwhm / 2., theta2 = hwhm*hwhm;
@@ -179,13 +179,13 @@ ilImage *ilImage_star(ilimtype_t type, int w, int h, double fwhm, double beta){
 #undef DRAW_star
 
 /**
- * @brief ilPattern_draw3 - draw pattern @ 3-channel image
+ * @brief il_Img3_drawpattern - draw pattern @ 3-channel image
  * @param img (io)    - image
  * @param p (i)       - the pattern
  * @param xc, yc      - coordinates of pattern center @ image
  * @param color       - color to draw pattern (when opaque == 255)
  */
-void ilImg3_drawpattern(ilImg3 *img, const ilPattern *p, int xc, int yc, const uint8_t color[3]){
+void il_Img3_drawpattern(il_Img3 *img, const il_Pattern *p, int xc, int yc, const uint8_t color[3]){
     if(!img || !p) return;
     int xul = xc - p->width/2, yul = yc - p->height/2;
     int xdr = xul+p->width-1, ydr = yul+p->height-1;
@@ -240,13 +240,13 @@ void ilImg3_drawpattern(ilImg3 *img, const ilPattern *p, int xc, int yc, const u
     }
 
 /**
- * @brief iladd_subimage - draw subimage over given image (by sum)
+ * @brief il_Image_addsub - draw subimage over given image (by sum)
  * @param img (io)    - image
  * @param p (i)       - subimage
  * @param xc, yc      - coordinates of pattern center @ image
  * @param weight      - img = img + p*weight
  */
-void ilImage_addsub(ilImage *img, const ilImage *p, int xc, int yc, double weight){
+void il_Image_addsub(il_Image *img, const il_Image *p, int xc, int yc, double weight){
     if(!img || !p) return;
     if(img->type != p->type){
         WARNX("iladd_subimage(): types of image and subimage must match");
@@ -303,13 +303,13 @@ void ilImage_addsub(ilImage *img, const ilImage *p, int xc, int yc, double weigh
 
 #define PUTP(type) do{((type*)I->data)[I->width*y+x] = *((type*)val);}while(0)
 /**
- * @brief ilImage_drawpix - put pixel @(x,y)
+ * @brief il_Image_drawpix - put pixel @(x,y)
  * @param I - image
  * @param x - point coordinates
  * @param y
  * @param val - data value to set (the same type as I->data)
  */
-void ilImage_drawpix(ilImage *I, int x, int y, const void *val){
+void il_Image_drawpix(il_Image *I, int x, int y, const void *val){
     if(x < 0 || x >= I->width || y < 0 || y >= I->height) return;
     switch(I->type){
         case IMTYPE_U8:
@@ -333,12 +333,13 @@ void ilImage_drawpix(ilImage *I, int x, int y, const void *val){
 }
 #undef PUTP
 
-static void plotLineLow(ilImage *I, int x0, int y0, int x1, int y1, const void *val){
+// plot line across X axe
+static void plotLineLow(il_Image *I, int x0, int y0, int x1, int y1, const void *val){
     int dx = x1 - x0, dy = y1 - y0, yi = 1;
     if(dy < 0){ yi = -1; dy = -dy; }
     int D = (2 * dy) - dx,  y = y0;
     for(int x = x0; x <= x1; ++x){
-        ilImage_drawpix(I, x, y, val);
+        il_Image_drawpix(I, x, y, val);
         if(D > 0){
             y += yi;
             D += 2 * (dy - dx);
@@ -347,12 +348,13 @@ static void plotLineLow(ilImage *I, int x0, int y0, int x1, int y1, const void *
         }
     }
 }
-static void plotLineHigh(ilImage *I, int x0, int y0, int x1, int y1, const void *val){
+// plot line across Y axe
+static void plotLineHigh(il_Image *I, int x0, int y0, int x1, int y1, const void *val){
     int dx = x1 - x0, dy = y1 - y0, xi = 1;
     if(dx < 0){ xi = -1; dx = -dx; }
     int D = (2 * dx) - dy,  x = x0;
     for(int y = y0; y <= y1; ++y){
-        ilImage_drawpix(I, x, y, val);
+        il_Image_drawpix(I, x, y, val);
         if(D > 0){
             x += xi;
             D += 2 * (dx - dy);
@@ -362,7 +364,7 @@ static void plotLineHigh(ilImage *I, int x0, int y0, int x1, int y1, const void 
     }
 }
 /**
- * @brief ilImage_drawline - Bresenham's line drawing on Image
+ * @brief il_Image_drawline - Bresenham's line drawing on Image
  * @param I - image
  * @param x0 - first point
  * @param y0
@@ -370,7 +372,7 @@ static void plotLineHigh(ilImage *I, int x0, int y0, int x1, int y1, const void 
  * @param y1
  * @param val - value to put
  */
-void ilImage_drawline(ilImage *I, int x0, int y0, int x1, int y1, const void *val){
+void il_Image_drawline(il_Image *I, int x0, int y0, int x1, int y1, const void *val){
     if(!I || !I->data) return;
     if(ABS(y1 - y0) < ABS(x1 - x0)){
         if(x0 > x1) plotLineLow(I, x1, y1, x0, y0, val);
@@ -382,26 +384,26 @@ void ilImage_drawline(ilImage *I, int x0, int y0, int x1, int y1, const void *va
 }
 
 /**
- * @brief ilImage_drawcircle - Bresenham's circle drawing on Image
+ * @brief il_Image_drawcircle - Bresenham's circle drawing on Image
  * @param I - image
  * @param x0- circle center
  * @param y0
  * @param R - circle radius
  * @param val - value to put
  */
-void ilImage_drawcircle(ilImage *I, int x0, int y0, int R, const void *val){
+void il_Image_drawcircle(il_Image *I, int x0, int y0, int R, const void *val){
     int x = R;
     int y = 0;
     int radiusError = 1-x;
     while(x >= y){
-        ilImage_drawpix(I, x + x0,   y + y0, val);
-        ilImage_drawpix(I, y + x0,   x + y0, val);
-        ilImage_drawpix(I, -x + x0,  y + y0, val);
-        ilImage_drawpix(I, -y + x0,  x + y0, val);
-        ilImage_drawpix(I, -x + x0, -y + y0, val);
-        ilImage_drawpix(I, -y + x0, -x + y0, val);
-        ilImage_drawpix(I, x + x0,  -y + y0, val);
-        ilImage_drawpix(I, y + x0,  -x + y0, val);
+        il_Image_drawpix(I, x + x0,   y + y0, val);
+        il_Image_drawpix(I, y + x0,   x + y0, val);
+        il_Image_drawpix(I, -x + x0,  y + y0, val);
+        il_Image_drawpix(I, -y + x0,  x + y0, val);
+        il_Image_drawpix(I, -x + x0, -y + y0, val);
+        il_Image_drawpix(I, -y + x0, -x + y0, val);
+        il_Image_drawpix(I, x + x0,  -y + y0, val);
+        il_Image_drawpix(I, y + x0,  -x + y0, val);
         y++;
         if (radiusError < 0){
             radiusError += 2 * y + 1;
@@ -414,11 +416,11 @@ void ilImage_drawcircle(ilImage *I, int x0, int y0, int R, const void *val){
 }
 
 /**
- * @brief ilImg3_setcolor - set image pixel to given color or its negative (if original color is near to target)
+ * @brief il_Img3_setcolor - set image pixel to given color or its negative (if original color is near to target)
  * @param impixel - pixel to change
  * @param color - desired color
  */
-void ilImg3_setcolor(uint8_t impixel[3], const uint8_t color[3]){
+void il_Img3_setcolor(uint8_t impixel[3], const uint8_t color[3]){
     int invert = 0;
     for(int i = 0; i < 3; ++i)
         if(impixel[i] > color[i]){
@@ -429,25 +431,26 @@ void ilImg3_setcolor(uint8_t impixel[3], const uint8_t color[3]){
 }
 
 /**
- * @brief ilImg3_drawpix - draw pixel with `color` or its negative on coloured image
+ * @brief il_Img3_drawpix - draw pixel with `color` or its negative on coloured image
  * @param I - image
  * @param x - point coordinates
  * @param y
  * @param color - desired color
  */
-void ilImg3_drawpix(ilImg3 *I, int x, int y, const uint8_t color[3]){
+void il_Img3_drawpix(il_Img3 *I, int x, int y, const uint8_t color[3]){
     if(!I || !I->data) return;
     if(x < 0 || x >= I->width) return;
     if(y < 0 || y >= I->height) return;
-    ilImg3_setcolor(I->data + 3*(I->width*y+x), color);
+    il_Img3_setcolor(I->data + 3*(I->width*y+x), color);
 }
 
-static void plotLineLow3(ilImg3 *I, int x0, int y0, int x1, int y1, const uint8_t color[3]){
+// draw lines across X or Y axis over color image
+static void plotLineLow3(il_Img3 *I, int x0, int y0, int x1, int y1, const uint8_t color[3]){
     int dx = x1 - x0, dy = y1 - y0, yi = 1;
     if(dy < 0){ yi = -1; dy = -dy; }
     int D = (2 * dy) - dx,  y = y0;
     for(int x = x0; x <= x1; ++x){
-        ilImg3_drawpix(I, x, y, color);
+        il_Img3_drawpix(I, x, y, color);
         if(D > 0){
             y += yi;
             D += 2 * (dy - dx);
@@ -456,13 +459,12 @@ static void plotLineLow3(ilImg3 *I, int x0, int y0, int x1, int y1, const uint8_
         }
     }
 }
-
-static void plotLineHigh3(ilImg3 *I, int x0, int y0, int x1, int y1, const uint8_t color[3]){
+static void plotLineHigh3(il_Img3 *I, int x0, int y0, int x1, int y1, const uint8_t color[3]){
     int dx = x1 - x0, dy = y1 - y0, xi = 1;
     if(dx < 0){ xi = -1; dx = -dx; }
     int D = (2 * dx) - dy,  x = x0;
     for(int y = y0; y <= y1; ++y){
-        ilImg3_drawpix(I, x, y, color);
+        il_Img3_drawpix(I, x, y, color);
         if(D > 0){
             x += xi;
             D += 2 * (dx - dy);
@@ -473,7 +475,7 @@ static void plotLineHigh3(ilImg3 *I, int x0, int y0, int x1, int y1, const uint8
 }
 
 /**
- * @brief ilImg3_drawline - Bresenham's line drawing on Img3
+ * @brief il_Img3_drawline - Bresenham's line drawing on Img3
  * @param I - image
  * @param x0 - first point
  * @param y0
@@ -481,7 +483,7 @@ static void plotLineHigh3(ilImg3 *I, int x0, int y0, int x1, int y1, const uint8
  * @param y1
  * @param color - drawing color
  */
-void ilImg3_drawline(ilImg3 *I, int x0, int y0, int x1, int y1, const uint8_t color[3]){
+void il_Img3_drawline(il_Img3 *I, int x0, int y0, int x1, int y1, const uint8_t color[3]){
     if(!I || !I->data) return;
     if(ABS(y1 - y0) < ABS(x1 - x0)){
         if(x0 > x1) plotLineLow3(I, x1, y1, x0, y0, color);
@@ -493,26 +495,26 @@ void ilImg3_drawline(ilImg3 *I, int x0, int y0, int x1, int y1, const uint8_t co
 }
 
 /**
- * @brief ilImg3_drawcircle - Bresenham's circle drawing on Image
+ * @brief il_Img3_drawcircle - Bresenham's circle drawing on Image
  * @param I - image
  * @param x0- circle center
  * @param y0
  * @param R - circle radius
  * @param val - value to put
  */
-void ilImg3_drawcircle(ilImg3 *I, int x0, int y0, int R, const uint8_t color[3]){
+void il_Img3_drawcircle(il_Img3 *I, int x0, int y0, int R, const uint8_t color[3]){
     int x = R;
     int y = 0;
     int radiusError = 1-x;
     while(x >= y){
-        ilImg3_drawpix(I, x + x0,   y + y0, color);
-        ilImg3_drawpix(I, y + x0,   x + y0, color);
-        ilImg3_drawpix(I, -x + x0,  y + y0, color);
-        ilImg3_drawpix(I, -y + x0,  x + y0, color);
-        ilImg3_drawpix(I, -x + x0, -y + y0, color);
-        ilImg3_drawpix(I, -y + x0, -x + y0, color);
-        ilImg3_drawpix(I, x + x0,  -y + y0, color);
-        ilImg3_drawpix(I, y + x0,  -x + y0, color);
+        il_Img3_drawpix(I, x + x0,   y + y0, color);
+        il_Img3_drawpix(I, y + x0,   x + y0, color);
+        il_Img3_drawpix(I, -x + x0,  y + y0, color);
+        il_Img3_drawpix(I, -y + x0,  x + y0, color);
+        il_Img3_drawpix(I, -x + x0, -y + y0, color);
+        il_Img3_drawpix(I, -y + x0, -x + y0, color);
+        il_Img3_drawpix(I, x + x0,  -y + y0, color);
+        il_Img3_drawpix(I, y + x0,  -x + y0, color);
         y++;
         if (radiusError < 0){
             radiusError += 2 * y + 1;
@@ -527,26 +529,26 @@ void ilImg3_drawcircle(ilImg3 *I, int x0, int y0, int R, const uint8_t color[3])
 // dots period in dotted line
 #define DOTSTEP (7)
 
-static void drawhline(ilImg3 *img, int y, const uint8_t color[3], int dots){
+static void drawhline(il_Img3 *img, int y, const uint8_t color[3], int dots){
     if(y < 0 || y >= img->height) return;
     uint8_t *data = img->data + 3*y*img->width;
     for(int x = 0; x < img->width; ++x, data += 3){
         if(dots && (x % DOTSTEP)) continue;
-        ilImg3_setcolor(data, color);
+        il_Img3_setcolor(data, color);
     }
 }
-static void drawvline(ilImg3 *img, int x, const uint8_t color[3], int dots){
+static void drawvline(il_Img3 *img, int x, const uint8_t color[3], int dots){
     if(x < 0 || x >= img->width) return;
     uint8_t *data = img->data + 3*x;
     int step = 3*img->width;
     for(int y = 0; y < img->height; ++y, data += step){
         if(dots && (y % DOTSTEP)) continue;
-        ilImg3_setcolor(data, color);
+        il_Img3_setcolor(data, color);
     }
 }
 
 /**
- * @brief ilImg3_drawgrid - draw simplest grid on image
+ * @brief il_Img3_drawgrid - draw simplest grid on image
  * @param img - image
  * @param x0 - grid center (0,0)
  * @param y0
@@ -554,7 +556,7 @@ static void drawvline(ilImg3 *img, int x, const uint8_t color[3], int dots){
  * @param ystep - step of horizontal lines (-//-)
  * @param color - color to draw
  */
-void ilImg3_drawgrid(ilImg3 *img, int x0, int y0, int xstep, int ystep, const uint8_t color[3]){
+void il_Img3_drawgrid(il_Img3 *img, int x0, int y0, int xstep, int ystep, const uint8_t color[3]){
     int dotted = 0;
     if(ystep){
         if(ystep < 0){ dotted = 1; ystep = -ystep; }
@@ -565,7 +567,7 @@ void ilImg3_drawgrid(ilImg3 *img, int x0, int y0, int xstep, int ystep, const ui
             /*if(!dotted){
                 char s[32];
                 snprintf(s, 31, "%d", (y-y0)/ ystep);
-                ilImg3_putstring(img, s, img->width/2+2, y-2, color);
+                il_Img3_putstring(img, s, img->width/2+2, y-2, color);
             }*/
         }
     }
@@ -578,14 +580,14 @@ void ilImg3_drawgrid(ilImg3 *img, int x0, int y0, int xstep, int ystep, const ui
             /*if(!dotted){
                 char s[32];
                 snprintf(s, 31, "%d", (x-x0)/ xstep);
-                ilImg3_putstring(img, s, x+2, img->height/2-2, color);
+                il_Img3_putstring(img, s, x+2, img->height/2-2, color);
             }*/
         }
     }
 }
 
 /**
- * @brief ilImg3_subimage - allocate image with size (x1-x0+1)x(y1-y0+1) and copy into it subimage of I
+ * @brief il_Img3_subimage - allocate image with size (x1-x0+1)x(y1-y0+1) and copy into it subimage of I
  * @param I - original
  * @param x0 - left upper point
  * @param y0
@@ -593,18 +595,18 @@ void ilImg3_drawgrid(ilImg3 *img, int x0, int y0, int xstep, int ystep, const ui
  * @param y1
  * @return image allocated here (or NULL if error)
  */
-ilImg3 *ilImg3_subimage(const ilImg3 *I, int x0, int y0, int x1, int y1){
+il_Img3 *il_Img3_subimage(const il_Img3 *I, int x0, int y0, int x1, int y1){
     if(x0 >= x1 || x1 < 0 || y0 >= y1 || y1 < 0 || !I || !I->data || !I->height || !I->width) return NULL;
-    ilImg3 *O = ilImg3_new(x1-x0+1, y1-y0+1);
+    il_Img3 *O = il_Img3_new(x1-x0+1, y1-y0+1);
     if(!O) return NULL;
     // input coordinates of angles to copy & len for memcpy
     int ixl = x0 > 0 ? x0 : 0, ixr = x1 < I->width ? x1 : I->width-1, xlen = 3*(ixr-ixl+1);
     int iyt = y0 > 0 ? y0 : 0, iyb = y1 < I->height ? y1 : I->height-1, ypix = iyb - iyt + 1;
     // output coordinates
-    int oxl = x0 < 0 ? -x0 : 0, oxr = oxl + ixr - ixl;
-    int oyt = y0 < 0 ? -y0 : 0, oyb = oyt + iyb - iyt;
+    int oxl = x0 < 0 ? -x0 : 0;
+    int oyt = y0 < 0 ? -y0 : 0;
     DBG("input subimage: from (%d, %d) to (%d, %d), w=%d, h=%d", ixl,iyt, ixr, iyb, xlen/3, ypix);
-    DBG("output subimage: from (%d, %d) to (%d, %d)", oxl,oyt, oxr, oyb);
+    DBG("output subimage: from (%d, %d) to (%d, %d)", oxl,oyt, oxl + ixr - ixl, oyt + iyb - iyt);
     OMP_FOR()
     for(int y = 0; y < ypix; ++y){
         uint8_t *in = I->data + (ixl + (iyt + y)*I->width)*3;

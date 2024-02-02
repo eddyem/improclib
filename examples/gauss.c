@@ -44,20 +44,20 @@ int main(int argc, char **argv){
     if(w < 1 || h < 1) ERRX("Wrong image size");
     if(xsigma < DBL_EPSILON || ysigma < DBL_EPSILON) ERRX("STD should be >0");
     if(Niter < 1) ERRX("Iteration number should be a large positive number");
-    ilImage *I = ilImage_new(w, h, IMTYPE_U8);
+    il_Image *I = il_Image_new(w, h, IMTYPE_U8);
     if(!I) ERRX("Can't create image %dx%d pixels", w, h);
     int hits = 0;
     for(int i = 0; i < Niter; ++i){
         //int x = (int)ilNormal(x0, sigma), y = (int)ilNormal(y0, sigma);
         double x, y;
-        ilNormalPair(&x, &y, x0, y0, xsigma, ysigma);
+        il_NormalPair(&x, &y, x0, y0, xsigma, ysigma);
         if(x < 0 || x >= I->width || y < 0 || y >= I->height) continue;
         uint8_t *pix = I->data + (int)x + ((int)y)*I->width;
         if(*pix < 255) ++*pix;
         ++hits;
     }
-    int ret = ilwrite_png(outp, I->width, I->height, 1, I->data);
-    ilImage_free(&I);
+    int ret = il_write_png(outp, I->width, I->height, 1, I->data);
+    il_Image_free(&I);
     if(!ret) return 1;
     printf("File %s ready; %d hits of %d\n", outp, hits, Niter);
     return 0;

@@ -25,7 +25,7 @@ static int w = 1024, h = 1024, help = 0;
 static double fwhm = 3.5, beta = 1., lambda = 10.;
 static char *outp = "output.jpg", *inp = NULL;
 
-static ilPattern *star = NULL, *cross = NULL;
+static il_Pattern *star = NULL, *cross = NULL;
 
 static myoption cmdlnopts[] = {
     {"help",    NO_ARGS,    NULL,   '?',    arg_int,    APTR(&help),    "show this help"},
@@ -58,21 +58,21 @@ static int getpars(const char *argv, int *x, int *y, int *a){
     return TRUE;
 }
 
-static void addstar(ilImg3 *I, const char *str){
+static void addstar(il_Img3 *I, const char *str){
     int x, y, a;
     if(!getpars(str, &x, &y, &a)) return;
     printf("Add 'star' at %d,%d (ampl=%d)\n", x,y,a);
     uint8_t c[3] = {a,a,a};
-    ilImg3_drawpattern(I, star, x, y, c);
+    il_Img3_drawpattern(I, star, x, y, c);
 }
-static void addcross(ilImg3 *I, const char *str){
+static void addcross(il_Img3 *I, const char *str){
     int x, y, a;
     if(!getpars(str, &x, &y, &a)) return;
     printf("Add 'cross' at %d,%d (ampl=%d)\n", x,y,a);
-    ilImg3_drawpattern(I, cross, x, y, ilColor_red);
+    il_Img3_drawpattern(I, cross, x, y, il_Color_red);
 }
 
-static void addfromfile(ilImg3 *I, void (*fn)(ilImg3*, const char*)){
+static void addfromfile(il_Img3 *I, void (*fn)(il_Img3*, const char*)){
     FILE *f = fopen(inp, "r");
     if(!f){
         WARN("Can't open %s", inp);
@@ -92,36 +92,36 @@ int main(int argc, char **argv){
     if(help) showhelp(-1, cmdlnopts);
     if(w < 1 || h < 1) ERRX("Wrong image size");
     if(argc == 0 && inp == NULL) ERRX("Point at least one coordinate pair or file name");
-    ilImg3 *I = ilImg3_new(w, h);
+    il_Img3 *I = il_Img3_new(w, h);
     if(!I) ERRX("Can't create image %dx%d pixels", w, h);
     int par = (int)(fwhm*25.);
-    star = ilPattern_star(par, par, fwhm, beta);
-    cross = ilPattern_xcross(25, 25);
+    star = il_Pattern_star(par, par, fwhm, beta);
+    cross = il_Pattern_xcross(25, 25);
     for(int i = 0; i < argc; ++i) addstar(I, argv[i]);
     if(inp) addfromfile(I, addstar);
-    ilPattern_free(&star);
+    il_Pattern_free(&star);
     double t0 = dtime();
-    ilImg3_addPoisson(I, lambda);
+    il_Img3_addPoisson(I, lambda);
     green("Poisson noice took %gms\n", (dtime()-t0) * 1e3);
-    if(!ilImg3_jpg(outp, I, 95)) WARNX("Can't save %s", outp);
+    if(!il_Img3_jpg(outp, I, 95)) WARNX("Can't save %s", outp);
     for(int i = 0; i < argc; ++i) addcross(I, argv[i]);
     if(inp) addfromfile(I, addcross);
-    ilPattern_free(&cross);
+    il_Pattern_free(&cross);
     uint8_t color[] = {255, 0, 100};
     //uint8_t color[] = {0, 0, 0};
-    ilImg3_putstring(I, "Test string", 450, 520, color);
-    ilImg3_drawline(I, -10,900, 1600,1050, color);
-    ilImg3_drawcircle(I, 400,400, 500, color);
-    ilImg3_drawgrid(I, 0, 0, 100, 100, ilColor_green);
-    ilImg3_drawgrid(I, 0, 0, -20, -20, ilColor_blue);
-    ilImg3 *s = ilImg3_subimage(I, 100,-100, 899,1099);
+    il_Img3_putstring(I, "Test string", 450, 520, color);
+    il_Img3_drawline(I, -10,900, 1600,1050, color);
+    il_Img3_drawcircle(I, 400,400, 500, color);
+    il_Img3_drawgrid(I, 0, 0, 100, 100, il_Color_green);
+    il_Img3_drawgrid(I, 0, 0, -20, -20, il_Color_blue);
+    il_Img3 *s = il_Img3_subimage(I, 100,-100, 899,1099);
     if(s){
-        ilImg3_jpg("outpsubimage.jpg", s, 95);
-        ilImg3_free(&s);
+        il_Img3_jpg("outpsubimage.jpg", s, 95);
+        il_Img3_free(&s);
     }else WARNX("Bad subimage parameters");
-    int ret = ilImg3_jpg("crosses.jpg", I, 95);
-    //int ret = ilImg3_png(outp, I);
-    ilImg3_free(&I);
+    int ret = il_Img3_jpg("crosses.jpg", I, 95);
+    //int ret = il_Img3_png(outp, I);
+    il_Img3_free(&I);
     if(!ret) return 4;
     printf("File %s ready\n", outp);
     return 0;

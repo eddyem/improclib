@@ -55,7 +55,7 @@ endif()
 # library
 add_library(${PROJ} SHARED ${SOURCES})
 # library header files
-set(LIBHEADER "usefull_macros.h")
+set(LIBHEADER "improclib.h")
 # -I
 include_directories(${${PROJ}_INCLUDE_DIRS})
 # -L

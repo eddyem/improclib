@@ -25,27 +25,27 @@ int main(int argc, char **argv){
         fprintf(stderr, "Usage: %s filename - open bw image file, equalize histogram, plot two crosses ans save as output.jpg\n", argv[0]);
         return 1;
     }
-    ilImage *I = ilImage_read(argv[1]);
+    il_Image *I = il_Image_read(argv[1]);
     if(!I){
         fprintf(stderr, "Can't read %s\n", argv[1]);
         return 2;
     }
     int w = I->width, h = I->height;
     double t0 = dtime();
-    uint8_t *eq = ilequalize8(I, 3, 0.1);
+    uint8_t *eq = il_equalize8(I, 3, 0.1);
     green("Equalize: %g ms\n", (dtime() - t0)*1e3);
-    ilImage_free(&I);
+    il_Image_free(&I);
     if(!eq) return 3;
-    ilImg3 *I3 = MALLOC(ilImg3, 1);
+    il_Img3 *I3 = MALLOC(il_Img3, 1);
     I3->data = eq;
     I3->height = h;
     I3->width = w;
-    ilPattern *cross = ilPattern_xcross(25, 25);
-    ilImg3_drawpattern(I3, cross, 30, 30, ilColor_red);
-    ilImg3_drawpattern(I3, cross, 150, 50, ilColor_green);
-    ilPattern_free(&cross);
-    int ret = ilImg3_jpg("output.jpg", I3, 95);
-    ilImg3_free(&I3);
+    il_Pattern *cross = il_Pattern_xcross(25, 25);
+    il_Img3_drawpattern(I3, cross, 30, 30, il_Color_red);
+    il_Img3_drawpattern(I3, cross, 150, 50, il_Color_green);
+    il_Pattern_free(&cross);
+    int ret = il_Img3_jpg("output.jpg", I3, 95);
+    il_Img3_free(&I3);
     if(!ret) return 4;
     printf("File 'output.jpg' ready\n");
     return 0;
