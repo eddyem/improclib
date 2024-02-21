@@ -118,6 +118,7 @@ for(int y = 0; y < h; ++y){ \
         for(int x = 0; x < w; ++x, ++data){ \
         double rx = (double)(x-w2); \
         double Intens = max * pow(1. + (rx*rx + ry2)/theta2, -beta); \
+        /*printf("x=%d, y=%d, rx=%g, Intens=%g", x,y,rx,Intens);*/ \
         *data = (type) Intens; \
     } \
 }
@@ -131,7 +132,7 @@ for(int y = 0; y < h; ++y){ \
  * @return pattern or NULL if error
  */
 il_Pattern *il_Pattern_star(int w, int h, double fwhm, double beta){
-    if(fwhm < 1.) return NULL;
+    if(fwhm < 0.001) return NULL;
     il_Pattern *p = il_Pattern_new(w, h);
     if(!p) return NULL;
     int w2 = w/2, h2 = h/2; // center of image
@@ -150,7 +151,7 @@ il_Pattern *il_Pattern_star(int w, int h, double fwhm, double beta){
  * @return
  */
 il_Image *il_Image_star(il_imtype_t type, int w, int h, double fwhm, double beta){
-    if(fwhm < 1.) return NULL;
+    if(fwhm < 0.001) return NULL;
     il_Image *p = il_Image_new(w, h, type);
     if(!p) return NULL;
     int w2 = w/2, h2 = h/2;
