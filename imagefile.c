@@ -61,7 +61,7 @@ static char *hexdmp(const char sig[8]){
 }
 #endif
 
-const int bytes[IMTYPE_AMOUNT] = {
+static const int bytes[IMTYPE_AMOUNT] = {
     [IMTYPE_U8] = 1,
     [IMTYPE_U16] = 2,
     [IMTYPE_U32] = 4,
@@ -158,7 +158,19 @@ il_Image *il_u82Image(const uint8_t *data, int width, int height){
  */
 static inline il_Image *im_loadmono(const char *name){
     int width, height, channels;
-    uint8_t *img = stbi_load(name, &width, &height, &channels, 1);
+    int is16 = stbi_is_16_bit(name);
+#ifdef EBUG
+    int x,y,n,ok;
+    ok = stbi_info(name, &x, &y, &n);
+    if(ok){
+        green("%s: %dx%d pix, %d channels", name, x,y, n);
+        if(is16) green("\t16bit!");
+        printf("\n");
+    }
+#endif
+    void *img;
+    if(is16) img = stbi_load_16(name, &width, &height, &channels, 1);
+    else img = stbi_load(name, &width, &height, &channels, 1);
     if(!img){
         WARNX("Error in loading the image %s\n", name);
         return NULL;
@@ -167,8 +179,8 @@ static inline il_Image *im_loadmono(const char *name){
     I->data = img;
     I->width = width;
     I->height = height;
-    I->type = IMTYPE_U8;
-    I->pixbytes = 1;
+    I->type = is16 ? IMTYPE_U16 : IMTYPE_U8;
+    I->pixbytes = bytes[I->type];
     il_Image_minmax(I);
     return I;
 }
@@ -300,7 +312,8 @@ size_t *il_histogram16(const il_Image *I){
 }
     return histogram;
 }
-
+// near-zero threshold to find 2nd derivative bend-point
+#define DERIV_THRESHOLD     (5)
 
 /**
  * @brief calc_background - Simple background calculation by histogram
@@ -345,9 +358,9 @@ int il_Image_background(il_Image *img, double *bkg){
     int lastidx = histosize - 1;
     OMP_FOR()
     for(int i = 2; i < lastidx; ++i)
-        diff2[i] = (histogram[i+2]+histogram[i-2]-2*histogram[i])/4;
-    //green("HISTO:\n");
-    //for(int i = 0; i < 256; ++i) printf("%d:\t%d\t%d\n", i, histogram[i], diff2[i]);
+        diff2[i] = ((ssize_t)histogram[i+2]+(ssize_t)histogram[i-2]-2*(ssize_t)histogram[i])/4;
+   //green("HISTO:\n");
+   //for(int i = 0; i < 256; ++i) printf("%d:\t%zd\t%zd\n", i, histogram[i], diff2[i]);
     FREE(histogram);
     if(modeidx < 2) modeidx = 2;
     if((int)modeidx > lastidx-1){
@@ -357,11 +370,13 @@ int il_Image_background(il_Image *img, double *bkg){
     }
     size_t borderidx = modeidx;
     for(int i = modeidx; i < lastidx; ++i){ // search bend-point by second derivate
-        if(diff2[i] <= 0 && diff2[i+1] <= 0){
+        //if(diff2[i] <= 0 && diff2[i+1] <= 0){
+        if(diff2[i] < DERIV_THRESHOLD && diff2[i] > -DERIV_THRESHOLD && diff2[i+1] < DERIV_THRESHOLD && diff2[i+1] > -DERIV_THRESHOLD){
+//DBG("i=%d, diff=%zd, next=%zd", i, diff2[i], diff2[i+1]);
             borderidx = i; break;
         }
     }
-    //DBG("borderidx=%d -> %d", borderidx, (borderidx+modeidx)/2);
+   DBG("borderidx=%zd, modeidx=%zd, avr=%zd", borderidx, modeidx, (borderidx+modeidx)/2);
     //*bk = (borderidx + modeidx) / 2;
     *bkg = borderidx;
     FREE(diff2);
@@ -601,7 +616,7 @@ static void dminmax(il_Image *I){
 void il_Image_minmax(il_Image *I){
     if(!I || !I->data) return;
 #ifdef EBUG
-    double t0 = dtime();
+    double t0 = sl_dtime();
 #endif
     switch(I->type){
         case IMTYPE_U8:
@@ -622,7 +637,7 @@ void il_Image_minmax(il_Image *I){
         default:
             return;
     }
-    DBG("Image_minmax(): Min=%g, Max=%g, time: %gms", I->minval, I->maxval, (dtime()-t0)*1e3);
+    DBG("Image_minmax(): Min=%g, Max=%g, time: %gms", I->minval, I->maxval, (sl_dtime()-t0)*1e3);
 }
 
 /*

@@ -21,6 +21,7 @@
 #include <usefull_macros.h>
 
 int main(int argc, char **argv){
+    sl_init();
     if(argc != 2){
         fprintf(stderr, "Usage: %s filename - open bw image file, equalize histogram, plot two crosses ans save as output.jpg\n", argv[0]);
         return 1;
@@ -31,9 +32,9 @@ int main(int argc, char **argv){
         return 2;
     }
     int w = I->width, h = I->height;
-    double t0 = dtime();
+    double t0 = sl_dtime();
     uint8_t *eq = il_equalize8(I, 3, 0.1);
-    green("Equalize: %g ms\n", (dtime() - t0)*1e3);
+    green("Equalize: %g ms\n", (sl_dtime() - t0)*1e3);
     il_Image_free(&I);
     if(!eq) return 3;
     il_Img3 *I3 = MALLOC(il_Img3, 1);

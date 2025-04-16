@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 set(PROJ improc)
-set(MINOR_VERSION "1")
+set(MINOR_VERSION "2")
 set(MID_VERSION "0")
 set(MAJOR_VERSION "0")
 set(VERSION "${MAJOR_VERSION}.${MID_VERSION}.${MINOR_VERSION}")

@@ -27,7 +27,7 @@ static char *outp = "output.jpg", *inp = NULL;
 
 static il_Pattern *star = NULL, *cross = NULL;
 
-static myoption cmdlnopts[] = {
+static sl_option_t cmdlnopts[] = {
     {"help",    NO_ARGS,    NULL,   '?',    arg_int,    APTR(&help),    "show this help"},
     {"width",   NEED_ARG,   NULL,   'w',    arg_int,    APTR(&w),       "resulting image width (default: 1024)"},
     {"height",  NEED_ARG,   NULL,   'h',    arg_int,    APTR(&h),       "resulting image height (default: 1024)"},
@@ -85,11 +85,11 @@ static void addfromfile(il_Img3 *I, void (*fn)(il_Img3*, const char*)){
 }
 
 int main(int argc, char **argv){
-    initial_setup();
+    sl_init();
     char *helpstring = "Usage: %s [args] x1,y1[,amp1] x2,y2[,amp2] ... xn,yn[,amp3] - draw 'stars' at coords xi,yi with amplitude ampi (default: 255)\n\n\tWhere args are:\n";
-    change_helpstring(helpstring);
-    parseargs(&argc, &argv, cmdlnopts);
-    if(help) showhelp(-1, cmdlnopts);
+    sl_helpstring(helpstring);
+    sl_parseargs(&argc, &argv, cmdlnopts);
+    if(help) sl_showhelp(-1, cmdlnopts);
     if(w < 1 || h < 1) ERRX("Wrong image size");
     if(argc == 0 && inp == NULL) ERRX("Point at least one coordinate pair or file name");
     il_Img3 *I = il_Img3_new(w, h);
@@ -100,9 +100,9 @@ int main(int argc, char **argv){
     for(int i = 0; i < argc; ++i) addstar(I, argv[i]);
     if(inp) addfromfile(I, addstar);
     il_Pattern_free(&star);
-    double t0 = dtime();
+    double t0 = sl_dtime();
     il_Img3_addPoisson(I, lambda);
-    green("Poisson noice took %gms\n", (dtime()-t0) * 1e3);
+    green("Poisson noice took %gms\n", (sl_dtime()-t0) * 1e3);
     if(!il_Img3_jpg(outp, I, 95)) WARNX("Can't save %s", outp);
     for(int i = 0; i < argc; ++i) addcross(I, argv[i]);
     if(inp) addfromfile(I, addcross);

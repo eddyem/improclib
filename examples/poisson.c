@@ -24,7 +24,7 @@ static int help = 0, w = 1024, h = 1024;
 static double lambda = 15.;
 static char *outp = "output.png";
 
-static myoption cmdlnopts[] = {
+static sl_option_t cmdlnopts[] = {
     {"help",    NO_ARGS,    NULL,   '?',    arg_int,    APTR(&help),    "show this help"},
     {"width",   NEED_ARG,   NULL,   'w',    arg_int,    APTR(&w),       "resulting image width (default: 1024)"},
     {"height",  NEED_ARG,   NULL,   'h',    arg_int,    APTR(&h),       "resulting image height (default: 1024)"},
@@ -34,9 +34,9 @@ static myoption cmdlnopts[] = {
 };
 
 int main(int argc, char **argv){
-    initial_setup();
-    parseargs(&argc, &argv, cmdlnopts);
-    if(help) showhelp(-1, cmdlnopts);
+    sl_init();
+    sl_parseargs(&argc, &argv, cmdlnopts);
+    if(help) sl_showhelp(-1, cmdlnopts);
     if(w < 1 || h < 1) ERRX("Wrong image size");
     if(lambda < 1.) ERRX("LAMBDA should be >=1");
     il_Image *I = il_Image_new(w, h, IMTYPE_U8);

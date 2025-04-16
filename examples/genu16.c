@@ -27,7 +27,7 @@ static char *outp = "output.png", *inp = NULL;
 
 static il_Image *star = NULL;
 
-static myoption cmdlnopts[] = {
+static sl_option_t cmdlnopts[] = {
     {"help",    NO_ARGS,    NULL,   '?',    arg_int,    APTR(&help),    "show this help"},
     {"width",   NEED_ARG,   NULL,   'w',    arg_int,    APTR(&w),       "resulting image width (default: 1024)"},
     {"height",  NEED_ARG,   NULL,   'h',    arg_int,    APTR(&h),       "resulting image height (default: 1024)"},
@@ -78,11 +78,11 @@ static void addfromfile(il_Image *I){
 }
 
 int main(int argc, char **argv){
-    initial_setup();
+    sl_init();
     char *helpstring = "Usage: %s [args] x1,y1[,w1] x2,y2[,w2] ... xn,yn[,w3] - draw 'stars' at coords xi,yi with weight wi (default: 1.)\n\n\tWhere args are:\n";
-    change_helpstring(helpstring);
-    parseargs(&argc, &argv, cmdlnopts);
-    if(help) showhelp(-1, cmdlnopts);
+    sl_helpstring(helpstring);
+    sl_parseargs(&argc, &argv, cmdlnopts);
+    if(help) sl_showhelp(-1, cmdlnopts);
     if(w < 1 || h < 1) ERRX("Wrong image size");
     if(argc == 0 && inp == NULL) ERRX("Point at least one coordinate pair or file name");
     il_Image *I = il_Image_new(w, h, IMTYPE_U16);

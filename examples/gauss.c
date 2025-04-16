@@ -24,7 +24,7 @@ static int help = 0, w = 1024, h = 1024, Niter = 1000000;
 static double xsigma = 10., ysigma = 10., x0 = 512., y0 = 512.;
 static char *outp = "output.png";
 
-static myoption cmdlnopts[] = {
+static sl_option_t cmdlnopts[] = {
     {"help",    NO_ARGS,    NULL,   '?',    arg_int,    APTR(&help),    "show this help"},
     {"width",   NEED_ARG,   NULL,   'w',    arg_int,    APTR(&w),       "resulting image width (default: 1024)"},
     {"height",  NEED_ARG,   NULL,   'h',    arg_int,    APTR(&h),       "resulting image height (default: 1024)"},
@@ -38,9 +38,9 @@ static myoption cmdlnopts[] = {
 };
 
 int main(int argc, char **argv){
-    initial_setup();
-    parseargs(&argc, &argv, cmdlnopts);
-    if(help) showhelp(-1, cmdlnopts);
+    sl_init();
+    sl_parseargs(&argc, &argv, cmdlnopts);
+    if(help) sl_showhelp(-1, cmdlnopts);
     if(w < 1 || h < 1) ERRX("Wrong image size");
     if(xsigma < DBL_EPSILON || ysigma < DBL_EPSILON) ERRX("STD should be >0");
     if(Niter < 1) ERRX("Iteration number should be a large positive number");
