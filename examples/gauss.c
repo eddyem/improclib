@@ -21,7 +21,7 @@
 #include <stdio.h>
 
 static int help = 0, w = 1024, h = 1024, Niter = 1000000;
-static double xsigma = 10., ysigma = 10., x0 = 512., y0 = 512.;
+static double xsigma = 10., ysigma = 10., x0 = 512., y_0 = 512.;
 static char *outp = "output.png";
 
 static sl_option_t cmdlnopts[] = {
@@ -32,7 +32,7 @@ static sl_option_t cmdlnopts[] = {
     {"xstd",    NEED_ARG,   NULL,   'X',    arg_double, APTR(&xsigma),  "STD of 'photons' distribution by X (default: 10)"},
     {"ystd",    NEED_ARG,   NULL,   'Y',    arg_double, APTR(&ysigma),  "STD of 'photons' distribution by Y (default: 10)"},
     {"xcenter", NEED_ARG,   NULL,   'x',    arg_double, APTR(&x0),      "X coordinate of 'image' center (default: 512)"},
-    {"ycenter", NEED_ARG,   NULL,   'y',    arg_double, APTR(&y0),      "Y coordinate of 'image' center (default: 512)"},
+    {"ycenter", NEED_ARG,   NULL,   'y',    arg_double, APTR(&y_0),      "Y coordinate of 'image' center (default: 512)"},
     {"niter",   NEED_ARG,   NULL,   'n',    arg_int,    APTR(&Niter),   "iterations (\"falling photons\") number (default: 1000000)"},
     end_option
 };
@@ -48,9 +48,9 @@ int main(int argc, char **argv){
     if(!I) ERRX("Can't create image %dx%d pixels", w, h);
     int hits = 0;
     for(int i = 0; i < Niter; ++i){
-        //int x = (int)ilNormal(x0, sigma), y = (int)ilNormal(y0, sigma);
+        //int x = (int)ilNormal(x0, sigma), y = (int)ilNormal(y_0, sigma);
         double x, y;
-        il_NormalPair(&x, &y, x0, y0, xsigma, ysigma);
+        il_NormalPair(&x, &y, x0, y_0, xsigma, ysigma);
         if(x < 0 || x >= I->width || y < 0 || y >= I->height) continue;
         uint8_t *pix = I->data + (int)x + ((int)y)*I->width;
         if(*pix < 255) ++*pix;
